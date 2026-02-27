@@ -86,3 +86,74 @@ Estrutura criada manualmente com `mkdir -p` para nao bloquear progresso; `Makefi
 
 **Proximo passo:**  
 Iniciar Fase 1 com bootstrap tecnico do ambiente local (kind + helm + base de observabilidade) e registrar cada sessao neste documento.
+
+### [2026-02-27] Fase 0.5 - GitHub (criacao de repositorio e sincronizacao)
+**Contexto:**  
+Necessidade de publicar o projeto `kindops-lab` no GitHub para habilitar fluxo GitOps/CI com historico rastreavel.
+
+**Conceitos-chave:**
+- **Remoto `origin`**
+  - Referencia local para o repositorio remoto no GitHub.
+- **Push inicial**
+  - Envio da branch local `main` para criar/atualizar `origin/main`.
+- **Tracking branch**
+  - Relacao entre branch local e branch remota para facilitar `pull`/`push`.
+- **Branch `main`**
+  - Branch principal e estavel do projeto.
+  - Deve representar o estado oficial do codigo.
+  - Idealmente recebe mudancas via PR aprovado.
+- **Branches `feature/*`**
+  - Branches temporarias para desenvolvimento isolado de funcionalidades.
+  - Exemplo: `feature/fase-1-bootstrap-local`.
+  - Evitam impacto direto na `main` durante implementacao.
+- **`origin/main`**
+  - Referencia da branch `main` no remoto (GitHub).
+  - A branch `main` local deve ficar sincronizada com `origin/main`.
+
+**O que e:**  
+Processo de conectar repositório local ao GitHub, autenticar, criar o repositório remoto e sincronizar a branch principal.
+
+**Para que serve:**  
+Garantir backup remoto, colaboracao via PR, integracao com ferramentas de CI/CD e rastreabilidade de mudancas.
+
+**Como usar no kindops-lab:**  
+Manter `main` sincronizada com `origin/main`, criar mudancas em `feature/*` e integrar via PR.
+
+**Decisao tomada:**  
+Criar o repositório no GitHub via interface web e usar push via HTTPS com autenticação por browser.
+
+**Trade-offs:**  
+Fluxo web e simples, mas pode gerar erro `repository not found` se o repo remoto ainda nao existir.
+
+**Comandos testados:**
+- `git init` -> inicializa o repositorio Git local na pasta do projeto.
+- `git remote -v` -> lista os repositorios remotos configurados (`fetch` e `push`).
+- `git status` -> mostra estado atual da branch e se ha arquivos pendentes para commit.
+- `git branch -vv` -> lista branches locais com info de tracking remoto e ultimo commit.
+- `git log --oneline -n 3` -> mostra os 3 commits mais recentes em formato resumido.
+- `git remote set-url origin https://github.com/magdiel100/kindops-lab.git` -> atualiza a URL do remoto `origin`.
+- `git push -u origin main` -> envia a branch `main` para o remoto e define rastreamento (`upstream`).
+
+**Resultado observado:**
+- `origin` configurado para `https://github.com/magdiel100/kindops-lab.git`.
+- Push concluido com sucesso: `main -> main`.
+- Branch local configurada para rastrear `origin/main`.
+- Working tree limpa apos sincronizacao.
+
+**Erros encontrados:**
+- `remote: Repository not found.`
+- `fatal: repository 'https://github.com/magdiel100/kindops-lab.git/' not found`
+- `bash: ]: command not found` (erro de digitacao)
+
+**Correcao aplicada:**
+- Criacao do repositorio remoto no GitHub com nome exato `kindops-lab`.
+- Nova tentativa de push apos autenticacao no browser.
+- Ignorado o erro de `]` por nao ser erro do Git.
+
+**Evidencias (arquivos/prints):**
+- URL do remoto: `https://github.com/magdiel100/kindops-lab.git`
+- Mensagem de push: `branch 'main' set up to track 'origin/main'`
+- Validacao: `On branch main` e `nothing to commit, working tree clean`
+
+**Proximo passo:**  
+Criar branch de trabalho da Fase 1 (`feature/fase-1-bootstrap-local`) e iniciar bootstrap tecnico do ambiente.
