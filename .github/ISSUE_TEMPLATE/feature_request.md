@@ -10,11 +10,11 @@ assignees: ""
 
 ## Problema a resolver
 
-## Solucao proposta
+## Solução proposta
 
 ## Alternativas consideradas
 
-## Criterios de aceite
+## Critérios de aceite
 - [ ]
 - [ ]
 

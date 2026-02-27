@@ -1,6 +1,6 @@
 # kindops-lab
 
-Laboratorio pratico para aprender DevOps/SRE com foco em implementacao real, documentacao e evolucao incremental.
+Laboratório prático para aprender DevOps/SRE com foco em implementação real, documentação e evolução incremental.
 
 ## Pre-requisitos
 - Git
@@ -21,10 +21,10 @@ Laboratorio pratico para aprender DevOps/SRE com foco em implementacao real, doc
 - `observability/`
 - `docs/`
 
-## Inicio rapido
+## Início rápido
 ```bash
 make bootstrap
 ```
 
-## Contribuicao
-Leia `docs/CONTRIBUTING.md` para convencoes de branch, fluxo de PR e checklist.
+## Contribuição
+Leia `docs/CONTRIBUTING.md` para convenções de branch, fluxo de PR e checklist.

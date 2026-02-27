@@ -17,9 +17,9 @@
 
 ## Checklist
 - [ ] Escopo pequeno e objetivo
-- [ ] Documentacao atualizada (quando aplicavel)
+- [ ] Documentação atualizada (quando aplicável)
 - [ ] Riscos e impacto descritos
-- [ ] Plano de rollback descrito (quando aplicavel)
+- [ ] Plano de rollback descrito (quando aplicável)
 
 ## Evidence
 - Logs/prints/links relevantes:

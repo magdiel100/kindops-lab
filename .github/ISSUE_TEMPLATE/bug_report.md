@@ -6,7 +6,7 @@ labels: bug
 assignees: ""
 ---
 
-## Descricao
+## Descrição
 
 ## Passos para reproduzir
 1.
@@ -17,11 +17,11 @@ assignees: ""
 
 ## Comportamento atual
 
-## Evidencias
+## Evidências
 - Logs:
 - Prints:
 
 ## Ambiente
 - Branch:
 - Commit:
-- Ferramentas/versoes relevantes:
+- Ferramentas/versões relevantes:
