@@ -159,3 +159,178 @@ Fluxo web e simples, mas pode gerar erro `repository not found` se o repo remoto
 
 **Próximo passo:**  
 Criar branch de trabalho da Fase 1 (`feature/fase-1-bootstrap-local`) e iniciar bootstrap técnico do ambiente.
+
+### [2026-02-28] Fase 1 - Bootstrap local (início)
+**Contexto:**  
+Início da Fase 1 para preparar bootstrap do host, configuração versionada do kind e scripts operacionais de ciclo de vida do cluster.
+
+**Conceitos-chave:**
+- **Bootstrap do host com Ansible**
+  - Padroniza preparação da máquina local para evitar setup manual.
+- **Cluster como configuração versionada**
+  - Define topologia do kind via arquivo (`infra/kind/kind-config.yaml`) para reprodutibilidade.
+- **Ciclo de vida do ambiente**
+  - Scripts dedicados para criar, destruir e recriar o cluster com o mesmo padrão.
+
+**O que é:**  
+Implementação da base operacional da Fase 1 (estrutura, automação e documentação).
+
+**Para que serve:**  
+Permitir subir e resetar o laboratório local de forma consistente e rastreável.
+
+**Como usar no kindops-lab:**  
+- `make ansible-bootstrap` para preparar host local.
+- `make bootstrap-kind` para subir cluster, namespaces e ingress.
+- `make destroy-kind` para remover cluster.
+- `make recreate-kind` para teste de reconstrução.
+
+**Aplicação dos scripts (Ansible + scripts operacionais):**
+- **Ansible (`infra/ansible/`)**
+  - `ansible.cfg`: define inventário padrão, roles path e uso de `sudo`.
+  - `inventory/hosts.ini`: alvo local (`localhost`) para execução no próprio host.
+  - `group_vars/all.yml`: controla o que instalar (`install_*`) e versões alvo.
+  - `playbooks/bootstrap-host.yml`: orquestra as roles `common`, `docker`, `kubectl`, `kind` e `helm`.
+  - `roles/common/tasks/main.yml`: valida Linux/WSL e instala dependências base.
+  - `roles/docker/tasks/main.yml`: verifica Docker e instala `docker.io` somente se habilitado.
+  - `roles/kubectl/tasks/main.yml`: instala `kubectl` se ausente.
+  - `roles/kind/tasks/main.yml`: instala `kind` se ausente.
+  - `roles/helm/tasks/main.yml`: instala `helm` se ausente.
+- **Scripts operacionais (`scripts/`)**
+  - `bootstrap-kind.sh`: valida pré-requisitos, cria cluster, aplica limites de recursos nos nós, cria namespaces base e instala ingress-nginx.
+  - `destroy-kind.sh`: remove o cluster `kindops-lab`.
+  - `recreate-kind.sh`: executa `destroy` + `bootstrap` para reconstrução do zero.
+
+**Ordem recomendada de execução:**
+1. `make ansible-bootstrap`
+2. `make bootstrap-kind`
+3. `kubectl get nodes`
+4. `kubectl get ns`
+5. `kubectl -n ingress-nginx get pods`
+6. `make recreate-kind` (teste de reprodutibilidade)
+
+**Decisão tomada:**  
+Criar playbook único (`bootstrap-host.yml`) com roles separadas por ferramenta (`docker`, `kubectl`, `kind`, `helm`) e scripts shell para operação do cluster.
+
+**Trade-offs:**  
+As roles estão focadas em Linux/WSL e simplicidade inicial. Para produção, será necessário adicionar suporte multi-OS e validações mais rígidas.
+
+**Comandos testados:**
+- `bash -n scripts/bootstrap-kind.sh scripts/destroy-kind.sh scripts/recreate-kind.sh` -> valida sintaxe dos scripts shell.
+- `ansible-playbook --version` -> valida disponibilidade do Ansible no host.
+- `for c in docker kubectl kind helm; do ...; done` -> verifica se os binários estão disponíveis no PATH.
+- `cat /etc/os-release` -> valida ambiente Ubuntu/WSL.
+- `which apt` -> valida presença do gerenciador de pacotes.
+- `sudo apt update && sudo apt install -y make ansible` -> instala pré-requisitos de automação.
+- `make ansible-bootstrap` -> executa bootstrap do host via Ansible.
+- `kind version` e `helm version --short` -> valida instalação das ferramentas faltantes.
+
+**Resultado observado:**
+- Estrutura criada:
+  - `infra/ansible/ansible.cfg`
+  - `infra/ansible/inventory/hosts.ini`
+  - `infra/ansible/group_vars/all.yml`
+  - `infra/ansible/playbooks/bootstrap-host.yml`
+  - `infra/ansible/roles/{common,docker,kubectl,kind,helm}/tasks/main.yml`
+  - `infra/kind/kind-config.yaml`
+  - `scripts/bootstrap-kind.sh`
+  - `scripts/destroy-kind.sh`
+  - `scripts/recreate-kind.sh`
+- Sintaxe dos scripts shell validada com sucesso.
+- `docker` encontrado no ambiente atual.
+
+**Erros encontrados:**
+- `ansible-playbook: command not found`
+- `kubectl`, `kind` e `helm` não encontrados no PATH do ambiente executado.
+- `make: command not found` ao tentar executar targets do projeto.
+- `ansible-playbook: error: unrecognized arguments: --roles-path`.
+- `install_docker is undefined` durante avaliação de condição no playbook.
+- Warning recorrente: Ansible ignorando `ansible.cfg` em diretório world-writable (`/mnt/c/...`).
+
+**Correção aplicada:**
+- Mantido fluxo de bootstrap versionado e idempotente.
+- Execução movida para WSL Ubuntu (com `apt` disponível).
+- Instalação de `make` e `ansible` no host WSL.
+- Ajuste do `Makefile` para usar:
+  - `ANSIBLE_ROLES_PATH=roles` (compatível com versão atual do Ansible).
+  - `-e @group_vars/all.yml` para carregar variáveis explicitamente quando `ansible.cfg` é ignorado.
+- `group_vars/all.yml` ajustado para `install_docker: false` (uso de Docker Desktop).
+- Resultado: `make ansible-bootstrap` concluído com sucesso; `kind` e `helm` instalados e validados.
+
+**Evidências (arquivos/prints):**
+- `infra/ansible/README.md`
+- `infra/kind/kind-config.yaml`
+- `scripts/bootstrap-kind.sh`
+- `scripts/destroy-kind.sh`
+- `scripts/recreate-kind.sh`
+- `Makefile` (ajustes no target `ansible-bootstrap`)
+- `infra/ansible/group_vars/all.yml` (Docker Desktop: `install_docker: false`)
+- `docs/runbooks.md` (RB-001 atualizado)
+- `docs/roadmap.md` (checklist da Fase 1 atualizado parcialmente)
+
+**Próximo passo:**  
+Executar no host local: `make bootstrap-kind`, validar nós/namespaces/ingress, executar `make recreate-kind` e então fechar os itens pendentes da Fase 1.
+
+**Ajustes e correções executados (resumo didático):**
+1. Ambiente correto definido:
+   - Problema: comandos `apt` e `make` falhavam fora do WSL.
+   - Ação: execução padronizada no Ubuntu WSL (`/mnt/c/...`).
+2. Bootstrap Ansible estabilizado para `/mnt/c`:
+   - Problema: `ansible.cfg` ignorado por permissão world-writable.
+   - Ação: `Makefile` passou a informar inventário, roles path e variáveis explicitamente no comando.
+3. Compatibilidade com versão do Ansible:
+   - Problema: opção `--roles-path` não suportada no binário instalado.
+   - Ação: troca para `ANSIBLE_ROLES_PATH=roles`.
+4. Estratégia Docker alinhada ao cenário real:
+   - Problema: projeto inicialmente previa instalar `docker.io`.
+   - Ação: `install_docker: false` para manter Docker Desktop como runtime.
+5. Resultado técnico:
+   - `make ansible-bootstrap` finalizou sem erro.
+   - `kind` e `helm` instalados (`kind v0.23.0`, `helm v3.15.4`).
+
+**Execução prática do bootstrap-kind (resultado validado):**
+- Comando executado:
+  - `make destroy-kind`
+  - `make bootstrap-kind`
+- Versões validadas em runtime:
+  - Docker `28.3.2`
+  - kubectl `v1.32.2`
+  - kind `v0.23.0`
+  - helm `v3.15.4`
+- Estado do cluster:
+  - `kindops-lab-control-plane` e `kindops-lab-worker` em `Ready`.
+- Namespaces base:
+  - `cicd`, `argocd`, `observability`, `istio-system`, `apps` criados e `Active`.
+- Ingress:
+  - release `ingress-nginx` instalada via Helm.
+  - pod do controller validado em `Running`.
+
+**Incidentes durante execução e correções aplicadas:**
+1. Erro de limite de memória no `docker update`:
+   - Erro: `Memory limit should be smaller than already set memoryswap limit`.
+   - Causa: atualização de `--memory` sem atualizar `--memory-swap`.
+   - Correção: script ajustado para enviar `--memory` e `--memory-swap` juntos nos nós do kind.
+2. Timeout transitório do API server ao criar namespace:
+   - Erro: `etcdserver: request timed out`.
+   - Causa: API ainda estabilizando logo após criação do cluster.
+   - Correção: adicionados `wait/retry` no `bootstrap-kind.sh` (checagem `/readyz` + retry em comandos `kubectl` críticos).
+   - Resultado: segunda execução completou bootstrap sem falhas.
+3. Falha intermitente no `make recreate-kind` durante `kubeadm init`:
+   - Erro: timeout na fase de addon DNS (`unable to fetch CoreDNS current installed version and ConfigMap`).
+   - Causa: instabilidade transitória de inicialização do control-plane em ambiente com recurso limitado.
+   - Correção: adicionada rotina de retry para criação do cluster no `bootstrap-kind.sh` (`KIND_CREATE_RETRIES`), com limpeza de tentativa parcial entre execuções.
+   - Resultado esperado: maior resiliência no teste de reprodutibilidade (destroy + create).
+
+**Validação do teste de reprodutibilidade (Fase 1):**
+- Comandos executados:
+  - `make recreate-kind`
+  - `kubectl get nodes`
+  - `kubectl get ns`
+  - `kubectl -n ingress-nginx get pods`
+- Resultado:
+  - Cluster recriado com sucesso na tentativa `1/3`.
+  - Nodes em `Ready` (`control-plane` e `worker`).
+  - Namespaces base criados e `Active`.
+  - Ingress instalado com release `deployed`.
+  - No instante da validação final, pod do ingress ainda em `ContainerCreating` (estado transitório comum logo após instalação).
+- Conclusão:
+  - Critério de reprodutibilidade da Fase 1 atendido (destroy + recreate funcionando de ponta a ponta).

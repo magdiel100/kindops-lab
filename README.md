@@ -26,5 +26,17 @@ Laboratório prático para aprender DevOps/SRE com foco em implementação real,
 make bootstrap
 ```
 
+## Fase 1 - Bootstrap local
+```bash
+# 1) Bootstrap do host (Linux/WSL)
+make ansible-bootstrap
+
+# 2) Subir cluster kind + namespaces + ingress
+make bootstrap-kind
+
+# 3) Recriar cluster do zero (teste de reprodutibilidade)
+make recreate-kind
+```
+
 ## Contribuição
 Leia `docs/CONTRIBUTING.md` para convenções de branch, fluxo de PR e checklist.

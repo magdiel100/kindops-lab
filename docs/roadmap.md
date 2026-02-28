@@ -22,6 +22,11 @@ Aplicações alvo:
 
 Duração sugerida: 16 a 18 semanas (ajustável).
 
+## Status atual
+- Fase 0: concluída.
+- Fase 1: concluída.
+- Próxima fase: Fase 2 (CI com Jenkins).
+
 ## Fase 0 - Fundação e padrões (Semana 1)
 Objetivo:
 - Preparar estrutura do projeto, padrões de código e base de documentação.
@@ -69,25 +74,32 @@ Critérios de pronto:
 - Script de destroy/recreate documentado.
 
 Checklist operacional (drill-down):
-- [ ] Criar estrutura inicial em `infra/ansible/` para bootstrap do host.
-- [ ] Definir variáveis e inventario do Ansible para ambiente local.
-- [ ] Criar playbook para instalar Docker.
-- [ ] Criar playbook para instalar `kubectl`.
-- [ ] Criar playbook para instalar `kind`.
-- [ ] Criar playbook para instalar `helm`.
-- [ ] Validar versões instaladas (`docker`, `kubectl`, `kind`, `helm`).
-- [ ] Criar arquivo de configuração versionado do cluster kind.
-- [ ] Subir cluster kind com comando documentado.
-- [ ] Verificar estado do cluster (`kubectl get nodes`).
-- [ ] Criar namespaces `cicd`, `argocd`, `observability`, `istio-system`, `apps`.
-- [ ] Validar namespaces criados com `kubectl get ns`.
-- [ ] Instalar ingress controller no cluster.
-- [ ] Validar ingress controller com pods `Running`.
-- [ ] Criar script de `destroy` do cluster.
-- [ ] Criar script de `recreate` (destroy + create).
-- [ ] Documentar passos de bootstrap no `runbooks.md`.
-- [ ] Registrar aprendizados e evidências da fase no `knowledge.md`.
-- [ ] Executar teste de reproducibilidade: destruir e recriar cluster do zero.
+- [x] Criar estrutura inicial em `infra/ansible/` para bootstrap do host.
+- [x] Definir variáveis e inventario do Ansible para ambiente local.
+- [x] Criar playbook para instalar Docker.
+- [x] Criar playbook para instalar `kubectl`.
+- [x] Criar playbook para instalar `kind`.
+- [x] Criar playbook para instalar `helm`.
+- [x] Validar versões instaladas (`docker`, `kubectl`, `kind`, `helm`).
+- [x] Criar arquivo de configuração versionado do cluster kind.
+- [x] Subir cluster kind com comando documentado.
+- [x] Verificar estado do cluster (`kubectl get nodes`).
+- [x] Criar namespaces `cicd`, `argocd`, `observability`, `istio-system`, `apps`.
+- [x] Validar namespaces criados com `kubectl get ns`.
+- [x] Instalar ingress controller no cluster.
+- [x] Validar ingress controller com pods `Running`.
+- [x] Criar script de `destroy` do cluster.
+- [x] Criar script de `recreate` (destroy + create).
+- [x] Documentar passos de bootstrap no `runbooks.md`.
+- [x] Registrar aprendizados e evidências da fase no `knowledge.md`.
+- [x] Executar teste de reproducibilidade: destruir e recriar cluster do zero.
+
+Nota operacional (WSL + `/mnt/c`):
+- Ao executar Ansible em diretório world-writable, `ansible.cfg` pode ser ignorado.
+- Fluxo suportado no projeto: `make ansible-bootstrap` com inventário/vars/roles definidos explicitamente no comando.
+- Para este laboratório, Docker será provido por Docker Desktop (`install_docker: false`), sem instalar `docker.io` via Ansible.
+
+Data de execução da Fase 1: 2026-02-28
 
 ## Fase 2 - CI com Jenkins (Semanas 2-4)
 Objetivo:

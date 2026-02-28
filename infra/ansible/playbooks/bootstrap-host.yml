@@ -1,0 +1,15 @@
+---
+- name: Bootstrap do host local para kindops-lab
+  hosts: local
+  gather_facts: true
+  become: true
+  roles:
+    - role: common
+    - role: docker
+      when: install_docker | bool
+    - role: kubectl
+      when: install_kubectl | bool
+    - role: kind
+      when: install_kind | bool
+    - role: helm
+      when: install_helm | bool

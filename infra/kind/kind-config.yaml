@@ -1,0 +1,32 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kindops-lab
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            system-reserved: "cpu=100m,memory=256Mi,ephemeral-storage=1Gi"
+            kube-reserved: "cpu=200m,memory=256Mi,ephemeral-storage=1Gi"
+            eviction-hard: "memory.available<200Mi,nodefs.available<10%"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 8080
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 8443
+        protocol: TCP
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            system-reserved: "cpu=100m,memory=256Mi,ephemeral-storage=1Gi"
+            kube-reserved: "cpu=200m,memory=256Mi,ephemeral-storage=1Gi"
+            eviction-hard: "memory.available<200Mi,nodefs.available<10%"
+networking:
+  disableDefaultCNI: false
+  kubeProxyMode: iptables

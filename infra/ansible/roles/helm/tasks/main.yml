@@ -1,0 +1,39 @@
+---
+- name: Verificar se helm ja existe
+  ansible.builtin.command: helm version --short
+  register: helm_check
+  changed_when: false
+  failed_when: false
+
+- name: Aviso quando helm ja estiver instalado
+  ansible.builtin.debug:
+    msg: "Helm ja instalado: {{ helm_check.stdout }}"
+  when: helm_check.rc == 0
+
+- name: Instalar helm
+  when: helm_check.rc != 0
+  block:
+    - name: Criar diretorio temporario
+      ansible.builtin.file:
+        path: /tmp/helm-install
+        state: directory
+        mode: '0755'
+
+    - name: Baixar helm
+      ansible.builtin.get_url:
+        url: "https://get.helm.sh/helm-{{ helm_version }}-linux-amd64.tar.gz"
+        dest: /tmp/helm-install/helm.tgz
+        mode: '0644'
+
+    - name: Descompactar helm
+      ansible.builtin.unarchive:
+        src: /tmp/helm-install/helm.tgz
+        dest: /tmp/helm-install
+        remote_src: true
+
+    - name: Copiar binario helm
+      ansible.builtin.copy:
+        src: /tmp/helm-install/linux-amd64/helm
+        dest: /usr/local/bin/helm
+        mode: '0755'
+        remote_src: true

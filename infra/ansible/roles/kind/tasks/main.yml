@@ -1,0 +1,20 @@
+---
+- name: Verificar se kind ja existe
+  ansible.builtin.command: kind version
+  register: kind_check
+  changed_when: false
+  failed_when: false
+
+- name: Aviso quando kind ja estiver instalado
+  ansible.builtin.debug:
+    msg: "kind ja instalado: {{ kind_check.stdout }}"
+  when: kind_check.rc == 0
+
+- name: Instalar kind
+  when: kind_check.rc != 0
+  block:
+    - name: Baixar kind
+      ansible.builtin.get_url:
+        url: "https://kind.sigs.k8s.io/dl/{{ kind_version }}/kind-linux-amd64"
+        dest: /usr/local/bin/kind
+        mode: '0755'

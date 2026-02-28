@@ -1,0 +1,12 @@
+---
+# Controle de instalação por ferramenta
+# Docker Desktop será usado no host; não instalar docker.io via Ansible.
+install_docker: false
+install_kubectl: true
+install_kind: true
+install_helm: true
+
+# Versões alvo
+kubectl_version: "v1.30.3"
+kind_version: "v0.23.0"
+helm_version: "v3.15.4"

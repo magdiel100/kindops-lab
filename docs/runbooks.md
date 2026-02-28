@@ -18,15 +18,23 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
 - Escopo: Subir ambiente base no kind.
 - Pre-requisitos: Docker, kubectl, kind, helm, terraform, ansible.
 - Passo a passo:
-  - Criar cluster kind.
-  - Aplicar bootstrap de namespaces e addons.
-  - Instalar Argo CD e stack observability.
+  - Executar bootstrap de host:
+    - `make ansible-bootstrap`
+  - Executar bootstrap do cluster:
+    - `make bootstrap-kind`
+  - O script realiza:
+    - criação do cluster `kindops-lab` com config versionada (`infra/kind/kind-config.yaml`)
+    - criação dos namespaces `cicd`, `argocd`, `observability`, `istio-system`, `apps`
+    - instalação do `ingress-nginx` via Helm
 - Validação:
+  - `make phase1-check`
   - Cluster `Ready`.
   - Pods principais `Running`.
-  - Argo CD acessível.
+  - `kubectl get ns` com namespaces base criados.
+  - `kubectl -n ingress-nginx get pods` com pods `Running`.
 - Rollback:
-  - Remover cluster e recriar do zero.
+  - `make destroy-kind`
+  - `make recreate-kind`
 
 ## RB-002 - Deploy de aplicação via GitOps
 - Escopo: Publicar nova versão de `app-python` ou `app-java`.
@@ -113,4 +121,3 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
 - Owner do projeto:
 - Canal de incidente:
 - Janela de manutenção:
-
