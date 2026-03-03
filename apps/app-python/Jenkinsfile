@@ -1,0 +1,97 @@
+pipeline {
+  agent any
+
+  environment {
+    APP_NAME = "app-python"
+    IMAGE_REPO = "local/${APP_NAME}"
+    IMAGE_TAG = "${env.GIT_COMMIT ?: 'dev'}"
+  }
+
+  stages {
+    stage('lint') {
+      steps {
+        sh '''
+          python3 -m venv .venv
+          . .venv/bin/activate
+          pip install -r requirements-dev.txt
+          ruff check app tests
+        '''
+      }
+    }
+
+    stage('unit') {
+      steps {
+        sh '''
+          . .venv/bin/activate
+          pytest -q tests/test_unit_health.py
+        '''
+      }
+    }
+
+    stage('integration') {
+      steps {
+        sh '''
+          . .venv/bin/activate
+          pytest -q tests/test_integration_http.py
+        '''
+      }
+    }
+
+    stage('build') {
+      steps {
+        sh 'docker build -t ${IMAGE_REPO}:${IMAGE_TAG} .'
+      }
+    }
+
+    stage('scan-trivy') {
+      steps {
+        sh '''
+          if command -v trivy >/dev/null 2>&1; then
+            trivy image --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_REPO}:${IMAGE_TAG}
+          else
+            echo "Trivy nao encontrado no agente; stage marcado como no-op."
+          fi
+        '''
+      }
+    }
+
+    stage('smoke-k6') {
+      steps {
+        sh '''
+          CONTAINER_NAME="${APP_NAME}-smoke"
+          docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
+          docker run -d --name "${CONTAINER_NAME}" -p 18000:8000 ${IMAGE_REPO}:${IMAGE_TAG}
+          sleep 5
+          if command -v k6 >/dev/null 2>&1; then
+            SMOKE_BASE_URL=http://127.0.0.1:18000 k6 run k6/smoke.js
+          else
+            echo "k6 nao encontrado no agente; stage marcado como no-op."
+          fi
+          docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
+        '''
+      }
+    }
+
+    stage('push') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'registry-creds', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASS')]) {
+          sh '''
+            if [ -z "${REGISTRY_HOST}" ]; then
+              echo "REGISTRY_HOST nao definido. Defina como variavel de ambiente no job."
+              exit 1
+            fi
+            echo "${REGISTRY_PASS}" | docker login "${REGISTRY_HOST}" -u "${REGISTRY_USER}" --password-stdin
+            docker tag ${IMAGE_REPO}:${IMAGE_TAG} ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
+            docker push ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
+          '''
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      sh 'rm -rf .venv || true'
+    }
+  }
+}

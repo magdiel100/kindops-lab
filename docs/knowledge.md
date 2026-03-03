@@ -334,3 +334,66 @@ Executar no host local: `make bootstrap-kind`, validar nós/namespaces/ingress, 
   - No instante da validação final, pod do ingress ainda em `ContainerCreating` (estado transitório comum logo após instalação).
 - Conclusão:
   - Critério de reprodutibilidade da Fase 1 atendido (destroy + recreate funcionando de ponta a ponta).
+
+### [2026-03-03] Fase 2 - CI com Jenkins (inicio)
+**Contexto:**  
+Inicio da Fase 2 para preparar CI com Jenkins no cluster local, com pipelines declarativas para `app-python` e `app-java`.
+
+**Conceitos-chave:**
+- **Jenkins via Helm no kind**
+  - Instalacao reproduzivel com `helm upgrade --install` no namespace `cicd`.
+- **Pipeline declarativa por aplicacao**
+  - Cada app possui `Jenkinsfile` proprio com estagios padrao de CI.
+- **Container hardening basico**
+  - Dockerfiles multi-stage com `HEALTHCHECK` e usuario nao-root.
+
+**O que e:**  
+Primeira entrega tecnica da Fase 2: estrutura de apps, pipelines, Dockerfiles e automacao de instalacao do Jenkins.
+
+**Para que serve:**  
+Sair do estado apenas documental para um fluxo CI executavel e versionado no repositorio.
+
+**Como usar no kindops-lab:**
+- Instalar Jenkins:
+  - `make install-jenkins`
+- Expor Jenkins localmente:
+  - `make jenkins-port-forward`
+- Pipelines declarativas:
+  - `apps/app-python/Jenkinsfile`
+  - `apps/app-java/Jenkinsfile`
+
+**Decisao tomada:**  
+Comecar com duas apps minimas (FastAPI e Spring Boot) para validar esteira de CI completa antes de sofisticar arquitetura dos servicos.
+
+**Trade-offs:**  
+- Vantagem: entrega rapida de pipeline end-to-end e base para evolucao.
+- Custo: cobertura de testes ainda inicial e sem publicacao real em registry ate configurar credenciais/host no Jenkins.
+
+**Comandos testados:**
+- `wsl chmod +x /mnt/c/Users/magdi/Documents/projetos/kindops-lab/scripts/install-jenkins.sh /mnt/c/Users/magdi/Documents/projetos/kindops-lab/scripts/jenkins-port-forward.sh`
+
+**Resultado observado:**
+- Estrutura criada para Fase 2:
+  - `infra/jenkins/values.yaml`
+  - `scripts/install-jenkins.sh`
+  - `scripts/jenkins-port-forward.sh`
+  - `apps/app-python/*` (app, testes, Dockerfile, Jenkinsfile, k6)
+  - `apps/app-java/*` (Spring Boot, testes, Dockerfile, Jenkinsfile, k6)
+- `Makefile` atualizado com `install-jenkins`, `jenkins-port-forward`, `phase2-check`.
+
+**Erros encontrados:**
+- Timeout ao tentar `chmod` com invocacao inicial via bash.
+
+**Correcao aplicada:**
+- Ajuste para execucao explicita via `wsl chmod ...`.
+
+**Evidencias (arquivos/prints):**
+- `apps/app-python/Jenkinsfile`
+- `apps/app-java/Jenkinsfile`
+- `infra/jenkins/values.yaml`
+- `scripts/install-jenkins.sh`
+- `scripts/jenkins-port-forward.sh`
+- `docs/runbooks.md` (RB-009)
+
+**Proximo passo:**  
+Executar instalacao real do Jenkins no cluster (`make install-jenkins`), criar jobs para os dois Jenkinsfiles e validar pipeline end-to-end com registry configurado.

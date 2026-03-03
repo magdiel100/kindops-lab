@@ -38,5 +38,18 @@ make bootstrap-kind
 make recreate-kind
 ```
 
+## Fase 2 - CI com Jenkins (inicio)
+```bash
+# 1) Instalar Jenkins no namespace cicd
+make install-jenkins
+
+# 2) Expor UI local
+make jenkins-port-forward
+
+# 3) Pipelines declarativas por app
+# apps/app-python/Jenkinsfile
+# apps/app-java/Jenkinsfile
+```
+
 ## Contribuição
 Leia `docs/CONTRIBUTING.md` para convenções de branch, fluxo de PR e checklist.

@@ -1,0 +1,31 @@
+controller:
+  admin:
+    username: admin
+    createSecret: true
+  serviceType: ClusterIP
+  resources:
+    requests:
+      cpu: "300m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1536Mi"
+  installPlugins:
+    - kubernetes:4253.v7700d91739e5
+    - workflow-aggregator:596.v8c21c963d92d
+    - git:5.2.1
+    - github:1.39.0
+    - docker-workflow:580.vc0c340686b_54
+    - credentials-binding:702.vfe613e537e88
+    - matrix-auth:3.2.2
+    - job-dsl:1.87
+    - configuration-as-code:2006.v001a_2ca_6b_574
+  jenkinsUrlProtocol: "http"
+  jenkinsUrl: "localhost:8080"
+  healthProbes: true
+  ingress:
+    enabled: false
+
+persistence:
+  enabled: true
+  size: 8Gi

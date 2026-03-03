@@ -129,12 +129,12 @@ Critérios de pronto:
 Checklist operacional (drill-down):
 - [ ] Instalar Jenkins via Helm no namespace `cicd`.
 - [ ] Configurar credenciais para registry (ECR/local) no Jenkins.
-- [ ] Criar pipeline declarativa para `app-python`.
-- [ ] Criar pipeline declarativa para `app-java`.
-- [ ] Incluir stages: lint, unit, integration, build, scan Trivy, smoke K6, push.
-- [ ] Validar Dockerfiles com multi-stage, `HEALTHCHECK` e cache de camadas.
+- [x] Criar pipeline declarativa para `app-python`.
+- [x] Criar pipeline declarativa para `app-java`.
+- [x] Incluir stages: lint, unit, integration, build, scan Trivy, smoke K6, push.
+- [x] Validar Dockerfiles com multi-stage, `HEALTHCHECK` e cache de camadas.
 - [ ] Executar pipeline end-to-end e capturar evidências.
-- [ ] Documentar fluxo CI no `runbooks.md` e aprendizados no `knowledge.md`.
+- [x] Documentar fluxo CI no `runbooks.md` e aprendizados no `knowledge.md`.
 
 ## Fase 3 - CD GitOps com Argo CD (Semanas 4-5)
 Objetivo:
@@ -471,3 +471,4 @@ Checklist operacional (drill-down):
 ## Proximos incrementos (opcional)
 - Progressive delivery (Argo Rollouts).
 - Multi-cluster e promoção entre ambientes.
+

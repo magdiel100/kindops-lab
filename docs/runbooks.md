@@ -121,3 +121,30 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
 - Owner do projeto:
 - Canal de incidente:
 - Janela de manutenção:
+
+## RB-009 - CI com Jenkins (Fase 2)
+- Escopo: Instalar Jenkins no kind e executar pipelines declarativas de `app-python` e `app-java`.
+- Pre-requisitos:
+  - Cluster `kindops-lab` ativo.
+  - Contexto kubectl: `kind-kindops-lab`.
+  - Docker, kubectl, helm e kind instalados.
+- Passo a passo:
+  - Instalar Jenkins:
+    - `make install-jenkins`
+  - Expor a UI local:
+    - `make jenkins-port-forward`
+  - Obter senha admin (se necessario):
+    - `kubectl -n cicd get secret jenkins -o jsonpath='{.data.jenkins-admin-password}' | base64 -d && echo`
+  - Configurar credenciais de registry no Jenkins:
+    - ID: `registry-creds`
+    - Tipo: Username with password
+  - Criar pipelines:
+    - Job 1 apontando para `apps/app-python/Jenkinsfile`
+    - Job 2 apontando para `apps/app-java/Jenkinsfile`
+  - Definir `REGISTRY_HOST` como variavel de ambiente no job.
+- Validacao:
+  - `kubectl -n cicd get pods` com controller `Running`.
+  - Stages dos Jenkinsfiles executando: lint, unit, integration, build, scan-trivy, smoke-k6, push.
+- Rollback:
+  - `helm -n cicd uninstall jenkins`
+  - `kubectl delete ns cicd` (opcional, se quiser reset total da fase)
