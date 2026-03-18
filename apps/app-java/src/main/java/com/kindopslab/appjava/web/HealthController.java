@@ -14,7 +14,7 @@ public class HealthController {
   }
 
   @GetMapping("/greet/{name}")
-  public Map<String, String> greet(@PathVariable String name) {
+  public Map<String, String> greet(@PathVariable("name") String name) {
     return Map.of("message", "hello, " + name);
   }
 }

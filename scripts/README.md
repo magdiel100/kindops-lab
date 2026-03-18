@@ -20,7 +20,7 @@ Execucao:
 
 ## Fase 2
 - `install-jenkins.sh`: instala/atualiza Jenkins via Helm no namespace `cicd`.
-- `jenkins-port-forward.sh`: publica a UI do Jenkins em `http://127.0.0.1:8080`.
+- `jenkins-port-forward.sh`: publica a UI do Jenkins em `http://127.0.0.1:18080` (default).
 
 Execucao:
 ```bash

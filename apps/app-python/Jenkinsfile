@@ -5,6 +5,7 @@ pipeline {
     APP_NAME = "app-python"
     IMAGE_REPO = "local/${APP_NAME}"
     IMAGE_TAG = "${env.GIT_COMMIT ?: 'dev'}"
+    REGISTRY_AUTH_REQUIRED = "${env.REGISTRY_AUTH_REQUIRED ?: 'false'}"
   }
 
   stages {
@@ -74,16 +75,26 @@ pipeline {
 
     stage('push') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'registry-creds', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASS')]) {
-          sh '''
-            if [ -z "${REGISTRY_HOST}" ]; then
-              echo "REGISTRY_HOST nao definido. Defina como variavel de ambiente no job."
-              exit 1
-            fi
-            echo "${REGISTRY_PASS}" | docker login "${REGISTRY_HOST}" -u "${REGISTRY_USER}" --password-stdin
-            docker tag ${IMAGE_REPO}:${IMAGE_TAG} ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
-            docker push ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
-          '''
+        script {
+          if (!env.REGISTRY_HOST?.trim()) {
+            error("REGISTRY_HOST nao definido. Defina como variavel de ambiente no job.")
+          }
+
+          if ((env.REGISTRY_AUTH_REQUIRED ?: 'false').toBoolean()) {
+            withCredentials([usernamePassword(credentialsId: 'registry-creds', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASS')]) {
+              sh '''
+                echo "${REGISTRY_PASS}" | docker login "${REGISTRY_HOST}" -u "${REGISTRY_USER}" --password-stdin
+                docker tag ${IMAGE_REPO}:${IMAGE_TAG} ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
+                docker push ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
+              '''
+            }
+          } else {
+            sh '''
+              echo "REGISTRY_AUTH_REQUIRED=false, pulando docker login."
+              docker tag ${IMAGE_REPO}:${IMAGE_TAG} ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
+              docker push ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
+            '''
+          }
         }
       }
     }

@@ -368,6 +368,7 @@ Comecar com duas apps minimas (FastAPI e Spring Boot) para validar esteira de CI
 **Trade-offs:**  
 - Vantagem: entrega rapida de pipeline end-to-end e base para evolucao.
 - Custo: cobertura de testes ainda inicial e sem publicacao real em registry ate configurar credenciais/host no Jenkins.
+- Decisao de escopo: na Fase 2, usar registry local para reduzir atrito e fechar o CI; integracao com ECR fica reservada para a Fase 8, onde AWS entra como parte formal da arquitetura.
 
 **Comandos testados:**
 - `wsl chmod +x /mnt/c/Users/magdi/Documents/projetos/kindops-lab/scripts/install-jenkins.sh /mnt/c/Users/magdi/Documents/projetos/kindops-lab/scripts/jenkins-port-forward.sh`
@@ -397,3 +398,130 @@ Comecar com duas apps minimas (FastAPI e Spring Boot) para validar esteira de CI
 
 **Proximo passo:**  
 Executar instalacao real do Jenkins no cluster (`make install-jenkins`), criar jobs para os dois Jenkinsfiles e validar pipeline end-to-end com registry configurado.
+
+**Atualizacao operacional (2026-03-03 - instalacao real Jenkins):**
+- Jenkins instalado no namespace `cicd` e pod `jenkins-0` estabilizado em `2/2 Running`.
+- Causa raiz do erro inicial no init container:
+  - conflito de versao de plugins (`configuration-as-code` e `credentials-binding`) no `infra/jenkins/values.yaml`.
+  - falhas temporarias `503` no download de plugins pelo `updates.jenkins.io`.
+- Correcao aplicada:
+  - atualizacao das versoes de plugins no `values.yaml`.
+  - script `install-jenkins.sh` com diagnostico automatico em falhas de rollout.
+- Acesso web:
+  - porta local `8080` estava ocupada.
+  - `jenkins-port-forward.sh` ajustado para usar `18080` por default.
+  - acesso validado em `http://127.0.0.1:18080`.
+- Credencial admin:
+  - usuario admin mantido.
+  - senha admin alterada manualmente no Jenkins (nao depender do valor inicial do secret apos alteracao manual).
+
+### [2026-03-18] Fase 2 - Registry local no Jenkins (integracao e finalidade)
+**Contexto:**  
+Fechamento da parte de registry da Fase 2 sem dependencias AWS, mantendo ECR como evolucao da Fase 8.
+
+**Conceitos-chave:**
+- **Registry local (`registry:2`)**
+  - Registry interno para validar `docker tag` e `docker push` no CI sem acoplamento cloud.
+- **Acesso do Jenkins no kind ao host**
+  - Como Jenkins roda no cluster kind, `localhost` no pipeline nao aponta para o host da maquina.
+  - Host validado para este laboratorio: `host.docker.internal:5000`.
+- **Autenticacao opcional por variavel**
+  - Pipelines ajustadas para suportar dois modos:
+    - local sem auth (`REGISTRY_AUTH_REQUIRED=false`)
+    - registry com auth futura (`REGISTRY_AUTH_REQUIRED=true` + `registry-creds`)
+
+**O que e:**  
+Implementacao da integracao com registry local para concluir os itens pendentes de CI da Fase 2.
+
+**Para que serve:**  
+Permitir validar push de imagem no pipeline agora, sem bloquear o roadmap por configuracao AWS antecipada.
+
+**Como usar no kindops-lab:**
+- Subir o registry local:
+  - `docker run -d --restart=always -p 5000:5000 --name registry-local registry:2`
+- Validar API do registry:
+  - `curl -i http://localhost:5000/v2/`
+- Validar conectividade a partir dos nos kind:
+  - `docker exec kindops-lab-control-plane sh -lc "curl -fsS http://host.docker.internal:5000/v2/"`
+  - `docker exec kindops-lab-worker sh -lc "curl -fsS http://host.docker.internal:5000/v2/"`
+- Configurar variaveis dos jobs Jenkins:
+  - `REGISTRY_HOST=host.docker.internal:5000`
+  - `REGISTRY_AUTH_REQUIRED=false`
+
+**Decisao tomada:**  
+Usar registry local na Fase 2 para validar CI end-to-end com menor atrito, mantendo migracao para ECR na Fase 8.
+
+**Trade-offs:**  
+- Vantagem: ciclo de validacao rapido e sem dependencia de IAM/ECR.
+- Custo: imagens ficam em registry local (escopo de laboratorio), sem cobertura cloud nesta fase.
+- Mitigacao: pipelines ja deixadas compativeis com autenticacao futura via `registry-creds`.
+
+**Comandos testados:**
+- `docker ps`
+- `docker logs registry-local`
+- `curl -i http://localhost:5000/v2/`
+- `kubectl -n cicd get pods -o wide`
+- `docker exec kindops-lab-control-plane sh -lc "(curl -fsS http://host.docker.internal:5000/v2/ || wget -qO- http://host.docker.internal:5000/v2/)"`
+- `docker exec kindops-lab-worker sh -lc "(curl -fsS http://host.docker.internal:5000/v2/ || wget -qO- http://host.docker.internal:5000/v2/)"`
+
+**Resultado observado:**
+- `registry-local` ativo e respondendo `HTTP 200` na rota `/v2/`.
+- Nos do kind com conectividade valida para `host.docker.internal:5000`.
+- `Jenkinsfile` de `app-python` e `app-java` atualizados para pular `docker login` quando `REGISTRY_AUTH_REQUIRED=false`.
+- Runbook da Fase 2 atualizado com `REGISTRY_HOST` e `REGISTRY_AUTH_REQUIRED`.
+
+**Erros encontrados:**
+- `Invoke-WebRequest: command not found` ao executar comando PowerShell dentro do Git Bash.
+
+**Correcao aplicada:**
+- Uso de `curl` no Git Bash para validacao HTTP do registry.
+
+**Evidencias (arquivos/prints):**
+- `apps/app-python/Jenkinsfile`
+- `apps/app-java/Jenkinsfile`
+- `docs/runbooks.md`
+- `docs/roadmap.md`
+- Logs do container `registry-local` com resposta `200` para `/v2/`.
+
+**Proximo passo:**  
+Executar pipelines `app-python` e `app-java` com as variaveis do job configuradas e capturar evidencias para fechar o item de execucao end-to-end da Fase 2.
+
+**Atualizacao operacional (2026-03-18 - fechamento end-to-end da Fase 2):**
+- Execucao end-to-end concluida para `app-python` e `app-java` com os estagios:
+  - lint
+  - unit
+  - integration
+  - build
+  - smoke
+  - push
+- Tag usada na validacao: `b6150be`.
+- Evidencias objetivas do registry local:
+  - `curl http://localhost:5000/v2/_catalog` -> `{"repositories":["app-java","app-python"]}`
+  - `curl http://localhost:5000/v2/app-python/tags/list` -> `{"name":"app-python","tags":["b6150be"]}`
+  - `curl http://localhost:5000/v2/app-java/tags/list` -> `{"name":"app-java","tags":["b6150be"]}`
+
+**Correcoes aplicadas durante o fechamento:**
+1. `app-java` - falha no teste de integracao (`500` em `/greet/{name}`):
+   - Causa: binding de `@PathVariable` sem nome explicito em runtime.
+   - Correcao: `@PathVariable("name")` em `HealthController.greet`.
+2. `app-java` - smoke falhando por jar nao executavel:
+   - Erro: `no main manifest attribute, in /app/app.jar`.
+   - Causa: `spring-boot-maven-plugin` sem execucao de `repackage` no `pom.xml`.
+   - Correcao: adicionar execucao `repackage` no plugin.
+
+**Evidencias (arquivos/prints) - atualizacao de fechamento:**
+- `apps/app-java/src/main/java/com/kindopslab/appjava/web/HealthController.java`
+- `apps/app-java/pom.xml`
+- `apps/app-python/Jenkinsfile`
+- `apps/app-java/Jenkinsfile`
+- `docs/roadmap.md` (item de end-to-end marcado como concluido)
+
+**Atualizacao operacional (2026-03-18 - acesso ao portal Jenkins):**
+- Endpoint oficial de acesso no laboratorio:
+  - `http://127.0.0.1:18080/`
+- Motivo tecnico:
+  - a porta `8080` do host ja estava ocupada pelo mapeamento do control-plane do kind (`0.0.0.0:8080->80`), causando conflito para `port-forward` do Jenkins.
+- Acao aplicada:
+  - manter `kubectl -n cicd port-forward svc/jenkins 18080:8080` como padrao operacional.
+- Resultado:
+  - acesso ao Jenkins estabilizado em `127.0.0.1:18080`.

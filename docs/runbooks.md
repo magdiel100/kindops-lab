@@ -132,19 +132,25 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
   - Instalar Jenkins:
     - `make install-jenkins`
   - Expor a UI local:
-    - `make jenkins-port-forward`
-  - Obter senha admin (se necessario):
+    - `make jenkins-port-forward` (porta default local: `18080`)
+  - Obter senha admin (se necessario, quando nao alterada manualmente):
     - `kubectl -n cicd get secret jenkins -o jsonpath='{.data.jenkins-admin-password}' | base64 -d && echo`
-  - Configurar credenciais de registry no Jenkins:
+  - Configurar credenciais de registry local no Jenkins:
     - ID: `registry-creds`
     - Tipo: Username with password
+    - Uso nesta fase: validar `docker login` + `docker push` em ambiente local, sem depender da AWS.
   - Criar pipelines:
     - Job 1 apontando para `apps/app-python/Jenkinsfile`
     - Job 2 apontando para `apps/app-java/Jenkinsfile`
   - Definir `REGISTRY_HOST` como variavel de ambiente no job.
+    - Exemplo para laboratorio local com Jenkins no kind: `host.docker.internal:5000`
+  - Definir `REGISTRY_AUTH_REQUIRED` como variavel de ambiente no job.
+    - Valor para Fase 2 com registry local sem auth: `false`
 - Validacao:
   - `kubectl -n cicd get pods` com controller `Running`.
   - Stages dos Jenkinsfiles executando: lint, unit, integration, build, scan-trivy, smoke-k6, push.
+- Evolucao planejada:
+  - Migrar o push de imagens para ECR na Fase 8, com autenticacao AWS e consumo das imagens pelo kind.
 - Rollback:
   - `helm -n cicd uninstall jenkins`
   - `kubectl delete ns cicd` (opcional, se quiser reset total da fase)
