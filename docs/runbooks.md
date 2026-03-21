@@ -154,3 +154,45 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
 - Rollback:
   - `helm -n cicd uninstall jenkins`
   - `kubectl delete ns cicd` (opcional, se quiser reset total da fase)
+
+## RB-010 - Evolucao Fase 2: agentes dinamicos Kubernetes no Jenkins
+- Escopo: mover execucao de pipeline do controller para pods efemeros no namespace `cicd`.
+- Pre-requisitos:
+  - Plugin `kubernetes` instalado no Jenkins.
+  - ServiceAccount `jenkins` com permissao para criar/listar/deletar pods em `cicd`.
+  - Imagem de agente CI publicada em `host.docker.internal:5000/jenkins-agent-ci:latest`.
+- Passo a passo:
+  - Build/push da imagem base do agente:
+    - `docker build -t host.docker.internal:5000/jenkins-agent-ci:latest -f infra/jenkins/agent/Dockerfile .`
+    - `docker push host.docker.internal:5000/jenkins-agent-ci:latest`
+  - Configurar cloud Kubernetes no Jenkins:
+    - `Manage Jenkins > Clouds > New cloud > Kubernetes`
+    - Namespace: `cicd`
+    - Jenkins URL interno: `http://jenkins.cicd.svc.cluster.local:8080`
+    - Jenkins tunnel: `jenkins-agent.cicd.svc.cluster.local:50000` (quando aplicavel)
+    - Test Connection deve retornar sucesso.
+  - Atualizar jobs para usar os Jenkinsfiles versionados:
+    - `apps/app-python/Jenkinsfile`
+    - `apps/app-java/Jenkinsfile`
+  - Executar build e validar pod efemero:
+    - `kubectl -n cicd get pods -w`
+    - conferir pod `jenkins-agent-*` criado durante execucao.
+- Validacao:
+  - Build nao fica em `Waiting for next available executor`.
+  - Stage `lint` de `app-python` encontra `python3`.
+  - Console mostra `Running on ... in /home/jenkins/agent/workspace/...`.
+- Troubleshooting:
+  - `403` ao criar pod:
+    - Validar RBAC do ServiceAccount `jenkins` em `cicd`.
+  - `ImagePullBackOff`:
+    - Confirmar push da imagem para `host.docker.internal:5000`.
+    - Testar pull da imagem a partir de um node/pod no cluster.
+  - `Cannot connect to the Docker daemon`:
+    - Confirmar mount de `/var/run/docker.sock` no podTemplate.
+  - Pod termina por `OOMKilled`/timeout:
+    - Ajustar `resources.requests/limits` no podTemplate dos Jenkinsfiles.
+  - Pod nao sobe por erro de cloud:
+    - Revalidar endpoint/namespace da cloud Kubernetes em `Manage Jenkins > Clouds`.
+- Rollback:
+  - Voltar temporariamente para `agent any` no Jenkinsfile.
+  - Reexecutar job para restaurar fluxo no controller enquanto corrige configuracao da cloud.

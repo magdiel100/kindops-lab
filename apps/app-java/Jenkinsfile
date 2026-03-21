@@ -1,5 +1,44 @@
 pipeline {
-  agent any
+  agent {
+    kubernetes {
+      defaultContainer 'ci'
+      yaml '''
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: jenkins-agent-java
+spec:
+  serviceAccountName: jenkins
+  restartPolicy: Never
+  volumes:
+    - name: workspace-volume
+      emptyDir: {}
+    - name: docker-sock
+      hostPath:
+        path: /var/run/docker.sock
+  containers:
+    - name: ci
+      image: host.docker.internal:5000/jenkins-agent-ci:latest
+      imagePullPolicy: IfNotPresent
+      command:
+        - cat
+      tty: true
+      volumeMounts:
+        - name: workspace-volume
+          mountPath: /home/jenkins/agent
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "768Mi"
+        limits:
+          cpu: "2000m"
+          memory: "2Gi"
+'''
+    }
+  }
 
   environment {
     APP_NAME = "app-java"

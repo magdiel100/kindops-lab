@@ -1,39 +1,39 @@
 ﻿# Roadmap: SRE/DevOps Lab com kind
 
-## VisÃ£o geral
-Projeto prÃ¡tico de Platform Engineering/DevOps/SRE para construir, operar e evoluir uma plataforma cloud-native local em Kubernetes kind, com foco em aprendizado aplicado e documentado.
+## Visão geral
+Projeto prático de Platform Engineering/DevOps/SRE para construir, operar e evoluir uma plataforma cloud-native local em Kubernetes kind, com foco em aprendizado aplicado e documentado.
 
-Escopo tÃ©cnico coberto:
-- Entrega de software: CI com Jenkins, CD GitOps com Argo CD e estratÃ©gias de canary + auto rollback por mÃ©trica.
-- Infraestrutura como cÃ³digo: provisionamento e padronizaÃ§Ã£o com Terraform e Ansible.
+Escopo técnico coberto:
+- Entrega de software: CI com Jenkins, CD GitOps com Argo CD e estratégias de canary + auto rollback por métrica.
+- Infraestrutura como código: provisionamento e padronização com Terraform e Ansible.
 - Observabilidade end-to-end: OpenTelemetry + Prometheus + Grafana + Loki + Tempo (self-hosted no kind).
-- Confiabilidade e resiliÃªncia: SLI/SLO, runbooks, game days e chaos engineering com LitmusChaos.
+- Confiabilidade e resiliência: SLI/SLO, runbooks, game days e chaos engineering com LitmusChaos.
 - Performance e capacidade: testes de carga com K6 e comparativo Python vs Java.
 - FinOps: visibilidade de custo por namespace/workload com OpenCost.
-- IntegraÃ§Ã£o cloud low-cost: ECR, SQS, DynamoDB, Lambda e Budgets na AWS.
-- EvoluÃ§Ã£o assistida por IA: investigaÃ§Ã£o de incidentes no Grafana com correlaÃ§Ã£o entre mÃ©tricas, logs e traces.
+- Integração cloud low-cost: ECR, SQS, DynamoDB, Lambda e Budgets na AWS.
+- Evolução assistida por IA: investigação de incidentes no Grafana com correlação entre métricas, logs e traces.
 
 Resultado esperado:
-- Pipeline ponta a ponta reproduzÃ­vel, com operaÃ§Ã£o orientada por mÃ©tricas e documentaÃ§Ã£o de conhecimento para retomada rÃ¡pida.
+- Pipeline ponta a ponta reproduzível, com operação orientada por métricas e documentação de conhecimento para retomada rápida.
 
-AplicaÃ§Ãµes alvo:
+Aplicações alvo:
 - `app-python` (FastAPI + worker)
 - `app-java` (Spring Boot)
 
-DuraÃ§Ã£o sugerida: 16 a 18 semanas (ajustÃ¡vel).
+Duração sugerida: 16 a 18 semanas (ajustável).
 
 ## Status atual
-- Fase 0: concluÃ­da.
-- Fase 1: concluÃ­da.
-- Fase 2: concluÃ­da.
-- PrÃ³xima fase: Fase 3 (CD GitOps com Argo CD).
+- Fase 0: concluída.
+- Fase 1: concluída.
+- Fase 2: concluída.
+- Próxima fase: Fase 3 (CD GitOps com Argo CD).
 
-## Fase 0 - FundaÃ§Ã£o e padrÃµes (Semana 1)
+## Fase 0 - Fundação e padrões (Semana 1)
 Objetivo:
-- Preparar estrutura do projeto, padrÃµes de cÃ³digo e base de documentaÃ§Ã£o.
+- Preparar estrutura do projeto, padrões de código e base de documentação.
 
-EntregÃ¡veis:
-- RepositÃ³rio criado com estrutura:
+Entregáveis:
+- Repositório criado com estrutura:
   - `apps/`
   - `infra/terraform/`
   - `infra/ansible/`
@@ -41,48 +41,48 @@ EntregÃ¡veis:
   - `gitops/`
   - `observability/`
   - `docs/`
-- ConvenÃ§Ãµes de branch e PR definidas.
+- Convenções de branch e PR definidas.
 - Templates de issue/PR e checklist de qualidade.
 
-CritÃ©rios de pronto:
+Critérios de pronto:
 - Projeto inicia com um comando documentado (`make bootstrap` ou script equivalente).
-- README com pre-requisitos e fluxo de contribuiÃ§Ã£o.
+- README com pre-requisitos e fluxo de contribuição.
 
 Checklist operacional (drill-down):
-- [x] Validar estrutura mÃ­nima de pastas do repositÃ³rio.
+- [x] Validar estrutura mínima de pastas do repositório.
 - [x] Criar/atualizar `README.md` com pre-requisitos e fluxo inicial.
-- [x] Criar/atualizar `docs/CONTRIBUTING.md` com padrÃµes de branch e PR.
+- [x] Criar/atualizar `docs/CONTRIBUTING.md` com padrões de branch e PR.
 - [x] Criar templates em `.github` para PR e Issues.
 - [x] Criar `Makefile` com alvo `bootstrap` (ou script equivalente).
 - [x] Validar `.gitignore` com itens de Terraform e ambiente local.
 - [x] Registrar Fase 0 em `docs/knowledge.md`.
 - [x] Publicar base inicial no GitHub (main sincronizada com origin/main).
 
-Data de execuÃ§Ã£o da Fase 0: 2026-02-27
+Data de execução da Fase 0: 2026-02-27
 
 ## Fase 1 - Bootstrap local (Semanas 1-2)
 Objetivo:
-- Subir o laboratÃ³rio local com kind e dependÃªncias base.
+- Subir o laboratório local com kind e dependências base.
 
-EntregÃ¡veis:
+Entregáveis:
 - Ansible para configurar host (docker, kubectl, kind, helm).
-- Cluster kind criado com configuraÃ§Ã£o versionada.
+- Cluster kind criado com configuração versionada.
 - Namespaces base: `cicd`, `argocd`, `observability`, `istio-system`, `apps`.
 - Ingress controller instalado.
 
-CritÃ©rios de pronto:
-- Cluster sobe de forma reproduzÃ­vel.
+Critérios de pronto:
+- Cluster sobe de forma reproduzível.
 - Script de destroy/recreate documentado.
 
 Checklist operacional (drill-down):
 - [x] Criar estrutura inicial em `infra/ansible/` para bootstrap do host.
-- [x] Definir variÃ¡veis e inventario do Ansible para ambiente local.
+- [x] Definir variáveis e inventario do Ansible para ambiente local.
 - [x] Criar playbook para instalar Docker.
 - [x] Criar playbook para instalar `kubectl`.
 - [x] Criar playbook para instalar `kind`.
 - [x] Criar playbook para instalar `helm`.
-- [x] Validar versÃµes instaladas (`docker`, `kubectl`, `kind`, `helm`).
-- [x] Criar arquivo de configuraÃ§Ã£o versionado do cluster kind.
+- [x] Validar versões instaladas (`docker`, `kubectl`, `kind`, `helm`).
+- [x] Criar arquivo de configuração versionado do cluster kind.
 - [x] Subir cluster kind com comando documentado.
 - [x] Verificar estado do cluster (`kubectl get nodes`).
 - [x] Criar namespaces `cicd`, `argocd`, `observability`, `istio-system`, `apps`.
@@ -92,26 +92,26 @@ Checklist operacional (drill-down):
 - [x] Criar script de `destroy` do cluster.
 - [x] Criar script de `recreate` (destroy + create).
 - [x] Documentar passos de bootstrap no `runbooks.md`.
-- [x] Registrar aprendizados e evidÃªncias da fase no `knowledge.md`.
+- [x] Registrar aprendizados e evidências da fase no `knowledge.md`.
 - [x] Executar teste de reproducibilidade: destruir e recriar cluster do zero.
 
 Nota operacional (WSL + `/mnt/c`):
-- Ao executar Ansible em diretÃ³rio world-writable, `ansible.cfg` pode ser ignorado.
-- Fluxo suportado no projeto: `make ansible-bootstrap` com inventÃ¡rio/vars/roles definidos explicitamente no comando.
-- Para este laboratÃ³rio, Docker serÃ¡ provido por Docker Desktop (`install_docker: false`), sem instalar `docker.io` via Ansible.
+- Ao executar Ansible em diretório world-writable, `ansible.cfg` pode ser ignorado.
+- Fluxo suportado no projeto: `make ansible-bootstrap` com inventário/vars/roles definidos explicitamente no comando.
+- Para este laboratório, Docker será provido por Docker Desktop (`install_docker: false`), sem instalar `docker.io` via Ansible.
 
-Data de execuÃ§Ã£o da Fase 1: 2026-02-28
+Data de execução da Fase 1: 2026-02-28
 
 ## Fase 2 - CI com Jenkins (Semanas 2-4)
 Objetivo:
-- Criar pipeline de integraÃ§Ã£o continua robusta.
+- Criar pipeline de integração continua robusta.
 
-EntregÃ¡veis:
+Entregáveis:
 - Jenkins instalado no cluster (Helm).
-- Pipelines declarativas para `app-python` e `app-java` com estÃ¡gios:
+- Pipelines declarativas para `app-python` e `app-java` com estágios:
   - lint
-  - teste unitÃ¡rio
-  - teste de integraÃ§Ã£o
+  - teste unitário
+  - teste de integração
   - build imagem
   - scan (Trivy)
   - smoke test de carga (K6)
@@ -122,10 +122,10 @@ EntregÃ¡veis:
   - camadas otimizadas para cache e tamanho final
 - Badges e status checks no GitHub.
 
-CritÃ©rios de pronto:
+Critérios de pronto:
 - PR bloqueado sem passar pipeline.
-- Build reproduzÃ­vel por tag e commit SHA.
-- Imagens finais menores e com tempo de build reduzido apÃ³s otimizaÃ§Ã£o de camadas.
+- Build reproduzível por tag e commit SHA.
+- Imagens finais menores e com tempo de build reduzido após otimização de camadas.
 
 Checklist operacional (drill-down):
 - [x] Instalar Jenkins via Helm no namespace `cicd`.
@@ -138,6 +138,19 @@ Checklist operacional (drill-down):
 - [x] Ajustar pipelines para push sem login quando `REGISTRY_AUTH_REQUIRED=false` (mantendo compatibilidade futura com `registry-creds`).
 - [x] Executar pipeline end-to-end e capturar evidências.
 - [x] Documentar fluxo CI no `runbooks.md` e aprendizados no `knowledge.md`.
+
+Checklist operacional (drill-down) - Evolução Fase 2: execução em pods dinâmicos:
+- [ ] Validar que o plugin `kubernetes` está instalado e saudável no Jenkins.
+- [ ] Confirmar configuração da cloud Kubernetes em `Manage Jenkins > Clouds` apontando para o cluster local.
+- [ ] Validar ServiceAccount do Jenkins com RBAC para criar/listar/deletar pods no namespace de execução.
+- [x] Definir namespace padrão de agentes efêmeros (ex.: `cicd`) e convenção de labels.
+- [x] Criar imagem base de agent com ferramentas necessárias para CI (`git`, `docker/kaniko`, `trivy`, `k6`, etc.).
+- [x] Atualizar `Jenkinsfile` de `app-python` para usar `agent { kubernetes { ... } }`.
+- [x] Atualizar `Jenkinsfile` de `app-java` para usar `agent { kubernetes { ... } }`.
+- [x] Configurar `podTemplate` com `resources.requests/limits` e `workspaceVolume` adequados.
+- [ ] Executar build de validação e comprovar que stages rodam em pod efêmero (não no controller `jenkins-0`).
+- [ ] Coletar evidências (`Console Output`, nome do pod agent, duração e consumo) e registrar em `knowledge.md`.
+- [x] Atualizar `runbooks.md` com troubleshooting de falhas comuns de agent dinâmico (RBAC, imagem, pull e timeout).
 
 Nota de evolução:
 - Nesta fase, o objetivo é validar o CI com menor atrito usando registry local.
@@ -167,67 +180,102 @@ Atualização operacional da Fase 2 (registry local):
 Objetivo:
 - Automatizar deploy usando estado desejado em Git.
 
-EntregÃ¡veis:
-- Argo CD instalado e acessÃ­vel.
+Entregáveis:
+- Argo CD instalado e acessível.
 - Apps Helm registradas via `Application`/`ApplicationSet`:
   - `app-python`
   - `app-java`
-- EstratÃ©gia de valores por ambiente (`dev-local`, `staging-local` opcional).
+- Estratégia de valores por ambiente (`dev-local`, `staging-local` opcional).
 - Rollback via `git revert`.
 - Subtopico ArgoCD: canary deployment com Argo Rollouts.
-- `AnalysisTemplate` ligado ao Prometheus para validaÃ§Ã£o por mÃ©trica.
-- Auto rollback quando latÃªncia/erros ultrapassarem thresholds definidos.
+- `AnalysisTemplate` ligado ao Prometheus para validação por métrica.
+- Auto rollback quando latência/erros ultrapassarem thresholds definidos.
 
-CritÃ©rios de pronto:
-- Merge em `main` gera deploy automÃ¡tico no kind.
+Critérios de pronto:
+- Merge em `main` gera deploy automático no kind.
 - Drift detectado e corrigido pelo Argo CD.
-- Canary executado com promoÃ§Ã£o automÃ¡tica quando mÃ©tricas estiverem saudaveis.
-- Rollback automÃ¡tico comprovado por falha controlada de mÃ©trica.
+- Canary executado com promoção automática quando métricas estiverem saudaveis.
+- Rollback automático comprovado por falha controlada de métrica.
 
 Checklist operacional (drill-down):
 - [ ] Instalar Argo CD no namespace `argocd`.
 - [ ] Criar `Application`/`ApplicationSet` para `app-python`.
 - [ ] Criar `Application`/`ApplicationSet` para `app-java`.
-- [ ] Configurar sincronizaÃ§Ã£o automÃ¡tica e polÃ­tica de self-heal.
+- [ ] Configurar sincronização automática e política de self-heal.
 - [ ] Instalar/ativar Argo Rollouts para canary.
-- [ ] Criar `AnalysisTemplate` com mÃ©tricas de erro e latÃªncia.
-- [ ] Simular degradaÃ§Ã£o e validar auto rollback.
+- [ ] Criar `AnalysisTemplate` com métricas de erro e latência.
+- [ ] Simular degradação e validar auto rollback.
 - [ ] Registrar fluxo GitOps e canary em `runbooks.md`.
 
 ## Fase 4 - Infra as Code com Terraform (Semanas 5-6)
 Objetivo:
-- Padronizar provisionamento de componentes Kubernetes por cÃ³digo.
+- Padronizar provisionamento de componentes Kubernetes por código.
 
-EntregÃ¡veis:
+Entregáveis:
 - Terraform para addons base:
   - namespaces
   - service accounts e RBAC
-  - configuraÃ§Ãµes de observabilidade
+  - configurações de observabilidade
   - recursos de suporte para apps
-- States e variÃ¡veis organizados.
+- States e variáveis organizados.
 
-CritÃ©rios de pronto:
+Critérios de pronto:
 - `terraform plan/apply` com output limpo e previsivel.
-- Recursos crÃ­ticos sem configuraÃ§Ã£o manual ad-hoc.
+- Recursos críticos sem configuração manual ad-hoc.
 
 Checklist operacional (drill-down):
 - [ ] Definir providers e backend de state Terraform.
-- [ ] Criar mÃ³dulo/base para namespaces e RBAC.
-- [ ] Criar mÃ³dulo/base para recursos de observabilidade.
-- [ ] Criar variÃ¡veis e `terraform.tfvars.example`.
-- [ ] Executar `terraform fmt` e validaÃ§Ã£o.
-- [ ] Executar `terraform plan` e revisar mudanÃ§as.
+- [ ] Criar módulo/base para namespaces e RBAC.
+- [ ] Criar módulo/base para recursos de observabilidade.
+- [ ] Criar variáveis e `terraform.tfvars.example`.
+- [ ] Executar `terraform fmt` e validação.
+- [ ] Executar `terraform plan` e revisar mudanças.
 - [ ] Executar `terraform apply` em ambiente local.
-- [ ] Documentar comandos e ordem de execuÃ§Ã£o no `runbooks.md`.
+- [ ] Documentar comandos e ordem de execução no `runbooks.md`.
+
+### Fase 4.5 - Evolução de domínio da aplicação (Semanas 6-7)
+Objetivo complementar:
+- Evoluir as aplicações de exemplo para um cenário distribuído mais realista, preparando o terreno para observabilidade avançada na fase seguinte.
+
+Entregáveis complementares:
+- APIs separadas por responsabilidade:
+  - BFF (`bff`)
+  - Serviço de domínio (`srv`)
+- Contratos de API versionados e documentados (OpenAPI/Swagger).
+- Persistência com banco de dados relacional e migrações versionadas.
+- Camada de cache com política de TTL e estratégia de invalidação.
+- Mensageria com processamento assíncrono via worker idempotente.
+- Fluxo de telemetria ponta a ponta pronto para instrumentação OTel (HTTP + DB + cache + fila).
+
+Critérios de pronto complementares:
+- Fluxo principal de negócio atravessa BFF, serviço, banco, cache e worker assíncrono.
+- Reprocessamento de mensagens não gera efeito colateral (idempotência comprovada).
+- Contratos de API e eventos versionados e documentados.
+- Aplicações preparadas para instrumentação distribuída completa na Fase 5 sem refactor estrutural.
+
+Checklist operacional (drill-down) - Subtópico da Fase 4:
+- [ ] Definir domínio funcional mínimo (caso de uso principal) e fluxo E2E alvo.
+- [ ] Criar estrutura de serviços `bff` e `srv` no repositório com responsabilidades claras.
+- [ ] Definir e publicar contratos de API (OpenAPI) para `bff` e `srv`.
+- [ ] Provisionar banco de dados no cluster local (ex.: Postgres) para desenvolvimento.
+- [ ] Implementar migrações versionadas (ex.: Flyway/Alembic) e política de rollback.
+- [ ] Implementar acesso a cache (ex.: Redis) com TTL por chave e regras de invalidação.
+- [ ] Definir broker de mensageria (ex.: RabbitMQ/Kafka) e tópicos/filas iniciais.
+- [ ] Implementar publicação de eventos no `srv` com payload versionado.
+- [ ] Implementar worker consumidor com deduplicação/idempotência.
+- [ ] Implementar testes unitários e de integração para DB, cache e fila.
+- [ ] Atualizar pipelines CI para validar contratos, migrações e fluxo assíncrono.
+- [ ] Registrar arquitetura, decisões e trade-offs no `docs/knowledge.md`.
+- [ ] Atualizar runbooks operacionais para troubleshooting de DB/cache/mensageria.
 
 ## Fase 5 - OpenTelemetry end-to-end (Semanas 6-8)
 Objetivo:
-- Instrumentar aplicaÃ§Ã£o e coletar traces, mÃ©tricas e logs com OpenTelemetry usando backend self-hosted no kind.
+- Instrumentar aplicação e coletar traces, métricas e logs com OpenTelemetry usando backend self-hosted no kind.
 
-EntregÃ¡veis:
+Entregáveis:
 - Instrumentacao OTel em `app-python`, `app-python-worker` e `app-java`:
   - spans de entrada/saida HTTP
-  - spans de processamento assÃ­ncrono
+  - spans de processamento assíncrono
   - propagacao de contexto entre componentes
 - OTel Collector implantado com pipelines:
   - receiver OTLP (gRPC/HTTP)
@@ -235,7 +283,7 @@ EntregÃ¡veis:
   - exporters para stack observability local (Prometheus, Loki e Tempo)
 - Correlacao logs x traces com `trace_id` e `span_id`.
 
-CritÃ©rios de pronto:
+Critérios de pronto:
 - Traces distribuidos visiveis por transacao completa.
 - Dashboard com p50/p95/p99, erro e throughput.
 - Cobertura de telemetria em rotas principais > 90% nas duas apps.
@@ -247,36 +295,36 @@ Checklist operacional (drill-down):
 - [ ] Instrumentar `app-python-worker` com propagacao de contexto.
 - [ ] Implantar OTel Collector com pipelines OTLP.
 - [ ] Configurar export para Prometheus, Loki e Tempo.
-- [ ] Validar correlaÃ§Ã£o `trace_id` entre logs e traces.
+- [ ] Validar correlação `trace_id` entre logs e traces.
 - [ ] Criar dashboards iniciais de RED metrics.
-- [ ] Registrar configuraÃ§Ã£o e troubleshooting no `knowledge.md`.
+- [ ] Registrar configuração e troubleshooting no `knowledge.md`.
 
-## Fase 6 - Observabilidade e operaÃ§Ã£o (Semanas 8-9)
+## Fase 6 - Observabilidade e operação (Semanas 8-9)
 Objetivo:
-- Tornar o ambiente observavel e acionÃ¡vel.
+- Tornar o ambiente observavel e acionável.
 
-EntregÃ¡veis:
-- Observabilidade operacional ativa no kind com configuraÃ§Ã£o manual de:
+Entregáveis:
+- Observabilidade operacional ativa no kind com configuração manual de:
   - Prometheus (scrape jobs, relabeling, retention)
   - Grafana (datasources, dashboards, pastas e provisionamento)
   - Loki (pipeline de logs e labels)
   - Tempo (armazenamento e consulta de traces)
   - OTel Collector (pipelines e roteamento por sinal)
-  - OpenCost (alocaÃ§Ã£o de custos por namespace/workload/label)
+  - OpenCost (alocação de custos por namespace/workload/label)
 - Dashboards:
   - visao executiva (SLO)
-  - visao tÃ©cnica (infra + aplicaÃ§Ã£o)
-  - visao FinOps (custo por serviÃ§o e tendÃªncia semanal)
+  - visao técnica (infra + aplicação)
+  - visao FinOps (custo por serviço e tendência semanal)
 - Regras de alerta:
   - erro alto
-  - latÃªncia alta
+  - latência alta
   - fila acumulando
   - restart em loop
 
-CritÃ©rios de pronto:
+Critérios de pronto:
 - Alertas acionam com testes controlados.
 - Runbooks vinculados a cada alerta critico.
-- OpenCost operando com relatÃ³rios de custo por namespace e workload.
+- OpenCost operando com relatórios de custo por namespace e workload.
 
 Checklist operacional (drill-down):
 - [ ] Instalar Prometheus com scrape jobs e retention definidos.
@@ -284,19 +332,19 @@ Checklist operacional (drill-down):
 - [ ] Instalar Loki e validar ingestao de logs.
 - [ ] Instalar Tempo e validar consulta de traces.
 - [ ] Integrar OTel Collector com toda stack observability.
-- [ ] Instalar OpenCost e validar mÃ©tricas de custo.
-- [ ] Criar dashboards: executivo, tÃ©cnico e FinOps.
+- [ ] Instalar OpenCost e validar métricas de custo.
+- [ ] Criar dashboards: executivo, técnico e FinOps.
 - [ ] Criar alertas e vincular runbooks para cada alerta critico.
 
 ## Fase 7 - Service Mesh com Istio (Semanas 9-10)
 Objetivo:
-- Controlar trÃ¡fego, seguranÃ§a e resiliÃªncia entre microservicos com service mesh.
+- Controlar tráfego, segurança e resiliência entre microservicos com service mesh.
 
-EntregÃ¡veis:
+Entregáveis:
 - Istio instalado com profile `demo` ou `default` otimizado para kind.
 - Sidecar injection habilitada no namespace `apps`.
-- mTLS em modo strict para comunicaÃ§Ã£o interna.
-- PolÃ­ticas:
+- mTLS em modo strict para comunicação interna.
+- Políticas:
   - `PeerAuthentication`
   - `RequestAuthentication`
   - `AuthorizationPolicy`
@@ -304,9 +352,9 @@ EntregÃ¡veis:
   - `VirtualService` + `DestinationRule`
   - canary inicial (exemplo: 90/10)
 
-CritÃ©rios de pronto:
-- ServiÃ§os comunicando somente via mesh.
-- Canary executado com rollback por configuraÃ§Ã£o GitOps.
+Critérios de pronto:
+- Serviços comunicando somente via mesh.
+- Canary executado com rollback por configuração GitOps.
 - Metricas do Istio exportadas pelo OTel e visiveis no Prometheus/Grafana self-hosted.
 
 Checklist operacional (drill-down):
@@ -315,63 +363,89 @@ Checklist operacional (drill-down):
 - [ ] Ativar `PeerAuthentication` strict para mTLS.
 - [ ] Criar `RequestAuthentication` e `AuthorizationPolicy` iniciais.
 - [ ] Criar `VirtualService` e `DestinationRule` para canary.
-- [ ] Validar trÃ¡fego e polÃ­ticas de acesso no mesh.
-- [ ] Validar mÃ©tricas do Istio no Grafana via OTel.
-- [ ] Documentar padrÃµes de rede/seguranÃ§a no `runbooks.md`.
+- [ ] Validar tráfego e políticas de acesso no mesh.
+- [ ] Validar métricas do Istio no Grafana via OTel.
+- [ ] Documentar padrões de rede/segurança no `runbooks.md`.
+
+### Estudo complementar da Fase 7 - API Gateway com Kong OSS (laboratório)
+Objetivo complementar:
+- Explorar conceitos de API Gateway em ambiente local para comparação prática com abordagem managed na AWS.
+
+Entregáveis complementares:
+- Kong OSS instalado no cluster local.
+- Rotas básicas publicadas para `bff`/`srv`.
+- Políticas iniciais de gateway:
+  - autenticação básica/token
+  - rate limit
+  - request/response transform (quando aplicável)
+- Documento comparativo Kong OSS vs AWS API Gateway no `docs/knowledge.md`.
+
+Checklist operacional (drill-down) - Estudo complementar:
+- [ ] Instalar Kong OSS no cluster local.
+- [ ] Publicar rota de API para pelo menos um serviço de aplicação.
+- [ ] Aplicar rate limiting e validar comportamento.
+- [ ] Aplicar política simples de autenticação e validar acesso.
+- [ ] Coletar métricas/logs de gateway no Grafana/Loki.
+- [ ] Registrar trade-offs e decisão arquitetural para fases AWS.
 
 ## Fase 8 - Integracoes AWS low-cost (Semanas 10-11)
 Objetivo:
-- Integrar o laboratÃ³rio local com serviÃ§os AWS de baixo custo/free tier.
+- Integrar o laboratório local com serviços AWS de baixo custo/free tier.
 
-EntregÃ¡veis:
+Entregáveis:
 - ECR para armazenar imagens do pipeline Jenkins.
-- SQS para fluxo assÃ­ncrono real da aplicaÃ§Ã£o.
-- DynamoDB (on-demand) para estado leve/deduplicaÃ§Ã£o.
-- Lambda para automaÃ§Ã£o event-driven simples.
+- SQS para fluxo assíncrono real da aplicação.
+- DynamoDB (on-demand) para estado leve/deduplicação.
+- Lambda para automação event-driven simples.
+- AWS API Gateway para exposição e governança de APIs.
 - Terraform com modulos para os recursos AWS usados.
 - AWS Budgets com alertas de custo baixo (ex: USD 5 e USD 10).
 
-CritÃ©rios de pronto:
+Critérios de pronto:
 - Deploy no kind consumindo imagem do ECR.
 - Aplicacao processando mensagens reais do SQS.
+- Endpoint publicado no AWS API Gateway com autenticação e throttling básico.
 - Custos mensais dentro do limite definido no projeto.
 
 Checklist operacional (drill-down):
-- [ ] Criar repositÃ³rio ECR e permissao de push/pull.
+- [ ] Criar repositório ECR e permissao de push/pull.
 - [ ] Configurar Jenkins para publicar imagens no ECR.
 - [ ] Criar fila SQS e parametros de retentativa/DLQ.
 - [ ] Configurar consumo de SQS no worker.
-- [ ] Criar tabela DynamoDB para estado/deduplicaÃ§Ã£o.
-- [ ] Criar Lambda inicial de automaÃ§Ã£o event-driven.
+- [ ] Criar tabela DynamoDB para estado/deduplicação.
+- [ ] Criar Lambda inicial de automação event-driven.
+- [ ] Criar API HTTP no AWS API Gateway integrada ao backend definido.
+- [ ] Configurar autenticação/autorização inicial no API Gateway (IAM/JWT/API Key).
+- [ ] Configurar throttling/rate limit e logs no CloudWatch.
 - [ ] Configurar AWS Budgets com alertas de baixo custo.
 - [ ] Validar fluxo completo app -> SQS -> worker -> DynamoDB.
 
 ## Fase 9 - Performance e carga com K6 (Semanas 11-12)
 Objetivo:
-- Validar comportamento da plataforma sob carga com cenÃ¡rios reproduziveis.
+- Validar comportamento da plataforma sob carga com cenários reproduziveis.
 
-EntregÃ¡veis:
+Entregáveis:
 - Suite de testes K6 versionada:
   - `smoke`
   - `load`
   - `stress`
 - Cenarios dedicados para `app-python` e `app-java` para comparativo de performance.
-- Thresholds definidos (latÃªncia e taxa de erro).
-- Exportacao de mÃ©tricas do K6 via OTel para Prometheus/Grafana self-hosted.
+- Thresholds definidos (latência e taxa de erro).
+- Exportacao de métricas do K6 via OTel para Prometheus/Grafana self-hosted.
 - Job agendado de baseline semanal de performance.
 
-CritÃ©rios de pronto:
+Critérios de pronto:
 - Relatorio de carga gerado automaticamente no pipeline.
 - Regressao de performance detectada por threshold no CI.
-- Comparativo baseline Python vs Java registrado na documentaÃ§Ã£o.
+- Comparativo baseline Python vs Java registrado na documentação.
 
 Checklist operacional (drill-down):
 - [ ] Criar scripts K6 `smoke`, `load` e `stress`.
-- [ ] Definir thresholds de erro e latÃªncia por cenÃ¡rio.
-- [ ] Integrar execuÃ§Ã£o K6 ao pipeline Jenkins.
-- [ ] Exportar mÃ©tricas K6 para stack de observabilidade.
-- [ ] Gerar relatorio automÃ¡tico por execuÃ§Ã£o.
-- [ ] Rodar baseline semanal e salvar histÃ³rico.
+- [ ] Definir thresholds de erro e latência por cenário.
+- [ ] Integrar execução K6 ao pipeline Jenkins.
+- [ ] Exportar métricas K6 para stack de observabilidade.
+- [ ] Gerar relatorio automático por execução.
+- [ ] Rodar baseline semanal e salvar histórico.
 - [ ] Comparar performance Python vs Java com dados objetivos.
 - [ ] Documentar tuning e gargalos encontrados.
 
@@ -379,80 +453,80 @@ Checklist operacional (drill-down):
 Objetivo:
 - Introduzir disciplina de SLI/SLO e resposta a incidentes.
 
-EntregÃ¡veis:
+Entregáveis:
 - Definicao de SLIs:
   - disponibilidade
-  - latÃªncia
+  - latência
   - taxa de erro
 - SLOs mensais definidos e medidos.
-- Error budget e polÃ­tica de congelamento de mudanÃ§as.
+- Error budget e política de congelamento de mudanças.
 - Game days (falhas simuladas) e postmortems.
 - LitmusChaos instalado e configurado com experimentos iniciais:
   - pod-delete
   - network-latency
   - cpu-hog
-- Relatorios de resiliÃªncia conectando experimento, impacto em SLI e aÃ§Ã£o corretiva.
+- Relatorios de resiliência conectando experimento, impacto em SLI e ação corretiva.
 
-CritÃ©rios de pronto:
+Critérios de pronto:
 - 2 ou mais incidentes simulados com aprendizado registrado.
-- DecisÃµes orientadas por SLO em pelo menos 1 ciclo de entrega.
+- Decisões orientadas por SLO em pelo menos 1 ciclo de entrega.
 - Pelo menos 3 experimentos LitmusChaos executados com rollback validado.
 
 Checklist operacional (drill-down):
-- [ ] Definir SLIs e SLOs por serviÃ§o.
+- [ ] Definir SLIs e SLOs por serviço.
 - [ ] Criar painel de error budget e indicadores de confiabilidade.
 - [ ] Instalar LitmusChaos no cluster.
-- [ ] Executar experimento `pod-delete` com coleta de evidÃªncias.
-- [ ] Executar experimento `network-latency` com coleta de evidÃªncias.
-- [ ] Executar experimento `cpu-hog` com coleta de evidÃªncias.
+- [ ] Executar experimento `pod-delete` com coleta de evidências.
+- [ ] Executar experimento `network-latency` com coleta de evidências.
+- [ ] Executar experimento `cpu-hog` com coleta de evidências.
 - [ ] Validar comportamento de auto-healing/rollback.
-- [ ] Registrar postmortem e aÃ§Ãµes preventivas.
+- [ ] Registrar postmortem e ações preventivas.
 
-## Fase 11 - SeguranÃ§a e governanÃ§a (Semanas 14-15)
+## Fase 11 - Segurança e governança (Semanas 14-15)
 Objetivo:
-- Aplicar seguranÃ§a de supply chain e polÃ­ticas de cluster.
+- Aplicar segurança de supply chain e políticas de cluster.
 
-EntregÃ¡veis:
-- Kyverno com polÃ­ticas basicas:
+Entregáveis:
+- Kyverno com políticas basicas:
   - bloquear `latest`
   - exigir requests/limits
   - exigir probes
-- Scan contÃ­nuo de imagens/dependÃªncias.
+- Scan contínuo de imagens/dependências.
 - Gestao de segredos com Sealed Secrets ou SOPS.
 
-CritÃ©rios de pronto:
-- PolÃ­ticas impedem deploys fora do padrÃ£o.
-- Segredos fora do repositÃ³rio em texto puro.
+Critérios de pronto:
+- Políticas impedem deploys fora do padrão.
+- Segredos fora do repositório em texto puro.
 
 Checklist operacional (drill-down):
 - [ ] Instalar Kyverno e validar admission webhooks.
-- [ ] Criar polÃ­tica para bloquear imagem `latest`.
-- [ ] Criar polÃ­tica para exigir requests/limits.
-- [ ] Criar polÃ­tica para exigir probes.
-- [ ] Integrar scan de dependÃªncias/imagens no CI.
-- [ ] Definir padrÃ£o de gestao de segredos (Sealed Secrets ou SOPS).
-- [ ] Migrar segredos existentes para padrÃ£o seguro.
+- [ ] Criar política para bloquear imagem `latest`.
+- [ ] Criar política para exigir requests/limits.
+- [ ] Criar política para exigir probes.
+- [ ] Integrar scan de dependências/imagens no CI.
+- [ ] Definir padrão de gestao de segredos (Sealed Secrets ou SOPS).
+- [ ] Migrar segredos existentes para padrão seguro.
 - [ ] Testar bloqueio de manifest fora de conformidade.
 
-## Fase 12 - Fechamento de portfÃ³lio (Semanas 15-17)
+## Fase 12 - Fechamento de portfólio (Semanas 15-17)
 Objetivo:
 - Consolidar projeto para demonstracao profissional.
 
-EntregÃ¡veis:
-- DocumentaÃ§Ã£o final:
+Entregáveis:
+- Documentação final:
   - arquitetura
   - roadmap executado
   - runbooks
   - postmortems
-- Demo guiada com cenÃ¡rio de incidente e recuperacao.
+- Demo guiada com cenário de incidente e recuperacao.
 - Backlog de melhorias futuras.
 
-CritÃ©rios de pronto:
+Critérios de pronto:
 - Qualquer pessoa consegue subir ambiente seguindo docs.
 - Projeto demonstravel em 15-20 minutos.
 
 Checklist operacional (drill-down):
-- [ ] Consolidar documentaÃ§Ã£o final de arquitetura.
+- [ ] Consolidar documentação final de arquitetura.
 - [ ] Revisar roadmap com status real de cada fase.
 - [ ] Revisar e consolidar runbooks operacionais.
 - [ ] Revisar postmortems e principais aprendizados.
@@ -463,39 +537,39 @@ Checklist operacional (drill-down):
 
 ## Fase 13 - IA aplicada a observabilidade (Semanas 17-18)
 Objetivo:
-- Aumentar capacidade de investigaÃ§Ã£o com recursos de IA no Grafana sobre dados de mÃ©tricas, logs e traces.
+- Aumentar capacidade de investigação com recursos de IA no Grafana sobre dados de métricas, logs e traces.
 
-EntregÃ¡veis:
+Entregáveis:
 - Plugins/recursos de IA no Grafana configurados para assistencia de troubleshooting.
-- Fluxo de correlaÃ§Ã£o com IA usando:
-  - Prometheus (mÃ©tricas)
+- Fluxo de correlação com IA usando:
+  - Prometheus (métricas)
   - Loki (logs)
   - Tempo (traces)
-- Playbook de anÃ¡lise assistida por IA para incidentes comuns.
-- ValidaÃ§Ã£o com 2 cenÃ¡rios reais de troubleshooting (erro alto e latÃªncia alta).
+- Playbook de análise assistida por IA para incidentes comuns.
+- Validação com 2 cenários reais de troubleshooting (erro alto e latência alta).
 
-CritÃ©rios de pronto:
-- IA retorna hipÃ³teses e links de correlaÃ§Ã£o entre mÃ©tricas, logs e traces.
-- Tempo medio de diagnÃ³stico reduzido nos cenÃ¡rios validados.
+Critérios de pronto:
+- IA retorna hipóteses e links de correlação entre métricas, logs e traces.
+- Tempo medio de diagnóstico reduzido nos cenários validados.
 - Limitacoes e riscos de uso de IA documentados (falsos positivos, privacidade, dependencia de contexto).
 
 Checklist operacional (drill-down):
 - [ ] Habilitar plugin/recurso de IA no Grafana.
 - [ ] Validar conexao do recurso de IA com datasources do Grafana.
-- [ ] Configurar contexto para correlaÃ§Ã£o Prometheus/Loki/Tempo.
-- [ ] Executar cenÃ¡rio de erro alto e medir tempo de diagnÃ³stico.
-- [ ] Executar cenÃ¡rio de latÃªncia alta e medir tempo de diagnÃ³stico.
-- [ ] Comparar diagnÃ³stico assistido por IA vs processo manual.
-- [ ] Documentar limites, riscos e boas prÃ¡ticas de uso.
+- [ ] Configurar contexto para correlação Prometheus/Loki/Tempo.
+- [ ] Executar cenário de erro alto e medir tempo de diagnóstico.
+- [ ] Executar cenário de latência alta e medir tempo de diagnóstico.
+- [ ] Comparar diagnóstico assistido por IA vs processo manual.
+- [ ] Documentar limites, riscos e boas práticas de uso.
 - [ ] Registrar playbook de troubleshooting assistido por IA.
 
 ## KPIs de sucesso do projeto
-- Lead time de mudanÃ§a reduzido ao longo das fases.
+- Lead time de mudança reduzido ao longo das fases.
 - Taxa de falha de deploy em queda.
 - MTTR melhorando nos game days.
 - Cobertura de telemetria e alertas aumentando por release.
 
 ## Proximos incrementos (opcional)
 - Progressive delivery (Argo Rollouts).
-- Multi-cluster e promoÃ§Ã£o entre ambientes.
+- Multi-cluster e promoção entre ambientes.
 

@@ -18,6 +18,9 @@ nodes:
       - containerPort: 443
         hostPort: 8443
         protocol: TCP
+      - containerPort: 32080
+        hostPort: 32080
+        protocol: TCP
   - role: worker
     kubeadmConfigPatches:
       - |

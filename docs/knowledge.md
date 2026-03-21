@@ -525,3 +525,215 @@ Executar pipelines `app-python` e `app-java` com as variaveis do job configurada
   - manter `kubectl -n cicd port-forward svc/jenkins 18080:8080` como padrao operacional.
 - Resultado:
   - acesso ao Jenkins estabilizado em `127.0.0.1:18080`.
+
+### [2026-03-20] Jenkins - Troubleshooting de startup lento do `jenkins-0`
+**Contexto:**  
+Pod `jenkins-0` no namespace `cicd` estava levando ~4-5 minutos para ficar `Ready` apos restart.
+
+**Conceitos-chave:**
+- **Image pull policy**
+  - `Always` forcava pull em todo restart, mesmo com imagem ja presente no node.
+- **Bootstrap do init container**
+  - instalacao/copia de plugins no startup adiciona latencia relevante.
+- **Readiness de aplicacao Java**
+  - Jenkins pode ficar em `503` por alguns ciclos ate concluir carregamento de plugins/JCasC.
+
+**O que e:**  
+Analise de causa raiz e otimizacao de tempo de recuperacao do controller Jenkins apos restart.
+
+**Para que serve:**  
+Reduzir tempo de indisponibilidade em reinicios operacionais e criar referencia para troubleshooting similar.
+
+**Como usar no kindops-lab (passo a passo):**
+1. Coletar estado e eventos:
+   - `kubectl -n cicd get pod jenkins-0 -o wide`
+   - `kubectl -n cicd describe pod jenkins-0`
+   - `kubectl -n cicd get events --sort-by=.lastTimestamp | tail -n 30`
+2. Validar logs do init e controller:
+   - `kubectl -n cicd logs jenkins-0 -c init --tail=200`
+   - `kubectl -n cicd logs jenkins-0 -c jenkins --since=20m | tail -n 200`
+3. Aplicar parametros no `infra/jenkins/values.yaml`:
+   - `controller.initializeOnce: true`
+   - `controller.installLatestPlugins: false`
+   - `controller.image.pullPolicy: IfNotPresent`
+4. Reaplicar release:
+   - `./scripts/install-jenkins.sh`
+5. Medir tempo real de restart:
+   - `kubectl -n cicd delete pod jenkins-0`
+   - `kubectl -n cicd wait --for=condition=Ready pod/jenkins-0 --timeout=900s`
+
+**Decisao tomada:**  
+Priorizar reducao de latencia sem aumentar complexidade operacional: manter imagem oficial, otimizar politica de pull e comportamento de inicializacao.
+
+**Trade-offs:**  
+- Vantagem: restart mais rapido e consistente.
+- Custo: ainda existe tempo de warm-up do Jenkins (startup probes/boot Java/plugins).
+- Mitigacao: para ganho adicional, usar imagem custom com plugins pre-instalados.
+
+**Comandos testados:**
+- `kubectl -n cicd describe pod jenkins-0`
+- `kubectl -n cicd logs jenkins-0 -c init --tail=200`
+- `kubectl -n cicd logs jenkins-0 -c jenkins --since=20m | tail -n 200`
+- `./scripts/install-jenkins.sh`
+- `kubectl -n cicd wait --for=condition=Ready pod/jenkins-0 --timeout=900s`
+
+**Resultado observado:**
+- Antes das otimizacoes: ~4-5 minutos para `Ready`.
+- Depois das otimizacoes: `RESTART_READY_SECONDS=118` (~1m58s).
+- Evento relevante apos ajuste:
+  - `Container image "docker.io/jenkins/jenkins:2.541.3-jdk21" already present on machine`
+  - (sem pull longo de ~1m25 observado anteriormente).
+
+**Erros encontrados:**
+- `kubectl top` indisponivel no ambiente atual:
+  - `error: Metrics API not available`
+- Durante analise, houve ciclo com `Startup probe failed` (`connection refused`, `503`) ate Jenkins completar bootstrap.
+
+**Correcao aplicada:**
+- Ajustes de valores no Helm:
+  - `initializeOnce: true`
+  - `installLatestPlugins: false`
+  - `image.pullPolicy: IfNotPresent`
+- Reaplicacao do release Jenkins e validacao por medicao objetiva de restart.
+
+**Evidencias (arquivos/prints):**
+- `infra/jenkins/values.yaml`
+- Saida de medicao:
+  - `RESTART_READY_SECONDS=118`
+- Eventos do pod com imagem "already present on machine".
+
+**Proximo passo:**  
+Se necessario reduzir abaixo de ~1m30, criar imagem custom Jenkins com plugins pre-instalados e revisar compatibilidade da lista de plugins para reduzir warm-up no boot.
+
+### [2026-03-21] Jenkins + CI + Cluster - resumo operacional do dia
+**Contexto:**  
+Sessao focada em estabilizacao do Jenkins, validacao guiada de pipeline via portal, ajuste do roadmap e correcoes operacionais do cluster.
+
+**Conceitos-chave:**
+- **Controller Jenkins vs executores**
+  - Controller coordena jobs; nao e ideal para executar builds pesadas.
+- **Drift de plugins**
+  - Atualizacao manual via UI pode conflitar com versoes declaradas no Helm.
+- **Metrics API no kind**
+  - `kubectl top` depende de `metrics-server` saudavel e acessando kubelet corretamente.
+
+**O que foi feito (acoes principais):**
+- Ajustado `startupProbe` do Jenkins para evitar restart prematuro durante boot.
+- Reaplicado release Jenkins e validado `jenkins-0` em `2/2 Running`.
+- Fixada senha admin no Helm (`controller.admin.password: admin`) e validada apos restart.
+- Atualizadas versoes de plugins no `values.yaml` e aplicadas via Helm:
+  - `kubernetes`, `git`, `github`, `docker-workflow`.
+- Validado acesso/uso do pipeline `app-python` pelo portal (SCM + branch + script path + parametros).
+- Corrigido `metrics-server` no kind (erro TLS de kubelet) para habilitar `kubectl top`.
+- Identificado e removido cluster nao utilizado `mycluster`.
+- Atualizado `docs/roadmap.md` com o conteudo de evolucao de dominio como subtitulo interno `Fase 4.5` dentro da Fase 4.
+
+**Problemas encontrados e causa raiz:**
+1. `jenkins-0` reiniciando/instavel em startup:
+   - Causa: tempo de bootstrap maior que tolerancia do probe em ciclos com plugins/JCasC.
+2. Pipeline `app-python` travando/falhando:
+   - Primeiro: sem executor disponivel (`Waiting for next available executor`).
+   - Depois: ambiente sem `python3` no executor atual (controller).
+3. `kubectl top` indisponivel:
+   - Causa: `metrics-server` com `x509` no scrape do kubelet (cert sem IP SAN).
+4. Recurso desnecessario no host:
+   - Cluster extra `mycluster` consumindo CPU/memoria.
+
+**Correcoes aplicadas:**
+- Jenkins:
+  - `controller.probes.startupProbe.failureThreshold: 40`
+  - `controller.image.pullPolicy: IfNotPresent`
+  - `controller.admin.password: admin`
+  - Reaplicacoes via `helm upgrade --install ... --wait`.
+- Plugins:
+  - Atualizacao declarativa no `infra/jenkins/values.yaml`.
+- Metrics:
+  - Patch no deployment `metrics-server` com:
+    - `--kubelet-insecure-tls`
+    - `--kubelet-preferred-address-types=InternalIP,Hostname,InternalDNS,ExternalDNS,ExternalIP`
+- Limpeza:
+  - `kind delete cluster --name mycluster`.
+
+**Comandos testados (resumo):**
+- `helm upgrade --install jenkins ... --wait`
+- `kubectl -n cicd get/describe/logs pod jenkins-0`
+- `kubectl -n cicd wait --for=condition=Ready pod/jenkins-0 --timeout=...`
+- `kubectl -n kube-system logs deploy/metrics-server --tail=...`
+- `kubectl -n kube-system patch deploy metrics-server --type='json' -p='...'`
+- `kubectl top node`
+- `kubectl top pod -n cicd`
+- `kind get clusters`
+- `kind delete cluster --name mycluster`
+
+**Resultado observado:**
+- Jenkins estabilizado e operacional (`jenkins-0` pronto apos restart).
+- Senha admin persistindo como `admin` apos reinicializacao.
+- Plugins alvo atualizados e release em estado `deployed`.
+- `kubectl top` funcionando para nodes e pods.
+- Apenas `kindops-lab` ativo (cluster extra removido).
+- Pipeline `app-python` executa ate o stage `lint`, falhando por dependencia de runtime (`python3`) no executor atual.
+
+**Evidencias (arquivos/prints):**
+- `infra/jenkins/values.yaml`
+- `docs/roadmap.md`
+- Console Output do job `app-python` (erro `python3: not found`).
+- Saidas de validacao:
+  - `kubectl top node`
+  - `kubectl top pod -n cicd`
+  - `kind get clusters`
+
+**Proximo passo:**  
+Continuar validacao da Fase 2/3 com apps atuais, movendo execucao dos jobs para agent adequado (ideal: pod dinamico Kubernetes com imagem contendo runtime/ferramentas de CI).
+
+### [2026-03-21] Evolucao Fase 2 - Jenkins com agentes dinamicos Kubernetes
+**Contexto:**  
+Execucao da evolucao do checklist da Fase 2 para remover dependencia do controller Jenkins como executor e preparar pipelines para pods efemeros.
+
+**Conceitos-chave:**
+- **Agente dinamico no Kubernetes**
+  - O job sobe um pod efemero por build e encerra ao final.
+- **PodTemplate declarativo no Jenkinsfile**
+  - Infra do agente fica versionada no repositorio e nao apenas na UI.
+- **Imagem base de CI**
+  - Padroniza runtime/ferramentas minimas para evitar falhas como `python3: not found`.
+
+**O que foi feito (acoes principais):**
+- `apps/app-python/Jenkinsfile` atualizado de `agent any` para `agent { kubernetes { ... } }`.
+- `apps/app-java/Jenkinsfile` atualizado de `agent any` para `agent { kubernetes { ... } }`.
+- PodTemplate adicionado em ambos:
+  - namespace de execucao `cicd` (via cloud/plugin + SA `jenkins`);
+  - label dedicada por app;
+  - `workspaceVolume` (`emptyDir`) em `/home/jenkins/agent`;
+  - recursos (`requests/limits`);
+  - mount de `/var/run/docker.sock`.
+- Imagem base de agente criada em `infra/jenkins/agent/Dockerfile` com:
+  - `python3`, `python3-venv`, `python3-pip`, `git`, `docker.io`, `maven`, `jdk17`.
+- Script operacional criado:
+  - `scripts/build-jenkins-agent.sh` (build/push para registry local).
+- `Makefile` atualizado com alvo:
+  - `make build-jenkins-agent`.
+- Runbook de troubleshooting criado:
+  - `docs/runbooks.md` -> `RB-010 - Evolucao Fase 2: agentes dinamicos Kubernetes no Jenkins`.
+- Roadmap atualizado para refletir itens concluidos desta evolucao.
+
+**Comandos executados (sessao):**
+- `Get-Content`/`rg` para validar estado de Jenkinsfiles, roadmap e runbooks.
+- Edicao versionada dos arquivos de pipeline, runbook, roadmap e imagem de agente.
+
+**Resultado observado:**
+- Codigo pronto para execucao em pod dinamico Kubernetes nas pipelines `app-python` e `app-java`.
+- Base de agente CI padronizada e versionada para uso no cluster local.
+- Documentacao operacional e status de roadmap alinhados com o que foi entregue.
+
+**Pendencias para fechar completamente o bloco da evolucao Fase 2:**
+1. Validar cloud Kubernetes no Jenkins (`Manage Jenkins > Clouds`).
+2. Executar build real e comprovar pod efemero (`jenkins-agent-*`) no namespace `cicd`.
+3. Registrar evidencias de console/pod/duracao no proprio `knowledge.md`.
+
+**Evidencias (arquivos):**
+- `apps/app-python/Jenkinsfile`
+- `apps/app-java/Jenkinsfile`
+- `infra/jenkins/agent/Dockerfile`
+- `scripts/build-jenkins-agent.sh`
+- `docs/runbooks.md`
+- `docs/roadmap.md`

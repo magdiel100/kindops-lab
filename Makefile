@@ -1,4 +1,4 @@
-.PHONY: bootstrap tree ansible-bootstrap bootstrap-kind destroy-kind recreate-kind phase1-check install-jenkins jenkins-port-forward phase2-check
+.PHONY: bootstrap tree ansible-bootstrap bootstrap-kind destroy-kind recreate-kind phase1-check install-jenkins jenkins-port-forward phase2-check build-jenkins-agent
 
 bootstrap:
 	@mkdir -p apps
@@ -39,3 +39,6 @@ jenkins-port-forward:
 phase2-check:
 	@bash -n scripts/install-jenkins.sh scripts/jenkins-port-forward.sh
 	@echo "Scripts da Fase 2 validados."
+
+build-jenkins-agent:
+	@./scripts/build-jenkins-agent.sh
