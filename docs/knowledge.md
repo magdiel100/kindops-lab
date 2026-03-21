@@ -737,3 +737,31 @@ Execucao da evolucao do checklist da Fase 2 para remover dependencia do controll
 - `scripts/build-jenkins-agent.sh`
 - `docs/runbooks.md`
 - `docs/roadmap.md`
+
+### [2026-03-21] Validacao Jenkins - plugin Kubernetes e cloud local
+**Contexto:**  
+Validacao dos dois itens pendentes da evolucao da Fase 2 relacionados ao Jenkins Kubernetes.
+
+**Itens validados:**
+1. Plugin `kubernetes` instalado e saudavel no Jenkins.
+2. Cloud Kubernetes configurada em `Manage Jenkins > Clouds` apontando para o cluster local.
+
+**Evidencias coletadas (portal):**
+- Tela `Manage Jenkins > Clouds` exibindo cloud `kubernetes`.
+- Cloud `kubernetes` com `Pod templates` presente (`default`).
+- Configuracao da cloud exibindo:
+  - `Jenkins URL`: `http://jenkins.cicd.svc.cluster.local:8080`
+  - `Jenkins tunnel`: `jenkins-agent.cicd.svc.cluster.local:50000`
+
+**Evidencias tecnicas adicionais (cluster/controller):**
+- Arquivos de plugin presentes no controller:
+  - `/var/jenkins_home/plugins/kubernetes.jpi`
+  - `/var/jenkins_home/plugins/kubernetes-client-api.jpi`
+  - `/var/jenkins_home/plugins/kubernetes-credentials.jpi`
+- Cloud registrada no `config.xml` do Jenkins como:
+  - `org.csanchez.jenkins.plugins.kubernetes.KubernetesCloud`
+  - `serverUrl: https://kubernetes.default`
+  - `namespace: cicd`
+
+**Resultado:**  
+Os dois checks foram concluídos e marcados como `[x]` no `docs/roadmap.md`.
