@@ -791,3 +791,36 @@ Execucao de validacao objetiva do ServiceAccount `jenkins` para o item pendente 
 
 **Conclusao:**  
 Item de RBAC do ServiceAccount Jenkins validado e marcado como concluido (`[x]`) no `docs/roadmap.md`.
+
+### [2026-03-21] Correcao de pre-check para reexecucao do job em pod efemero
+**Contexto:**  
+Antes da reexecucao do job `app-python`, foram executadas as 3 correcoes solicitadas para garantir uso do `Jenkinsfile` atualizado e disponibilidade da imagem do agent no cluster.
+
+**Acoes executadas:**
+1. Sincronizacao SCM:
+   - `git push origin main` -> `Everything up-to-date`.
+2. Publicacao da imagem de agent:
+   - Build da imagem de CI.
+   - Push validado em `localhost:5000/jenkins-agent-ci:latest`.
+3. Correcao de execucao no cluster (agent image):
+   - Testes de pull por `host.docker.internal:5000` e `localhost:5000` apresentaram `ImagePullBackOff` por tentativa HTTPS no runtime do node.
+   - Mitigacao aplicada sem recriar cluster:
+     - `kind load docker-image jenkins-agent-ci:local --name kindops-lab`.
+     - Ajuste dos Jenkinsfiles para `image: jenkins-agent-ci:local`.
+
+**Evidencias objetivas:**
+- Registry local contendo tag:
+  - `{"name":"jenkins-agent-ci","tags":["latest"]}`
+- Erro observado no pull remoto (antes da mitigacao):
+  - `http: server gave HTTP response to HTTPS client`
+- Teste de pod apos mitigacao:
+  - `kubectl -n cicd run image-check-local --image=jenkins-agent-ci:local ...`
+  - Resultado: pod `Completed` com log `ok`.
+
+**Arquivos alterados na mitigacao:**
+- `apps/app-python/Jenkinsfile`
+- `apps/app-java/Jenkinsfile`
+- `docs/roadmap.md`
+
+**Proximo passo recomendado:**  
+Executar novamente o job `app-python`/`app-java` e capturar evidencias de pod `jenkins-agent-*` no namespace `cicd` para concluir os dois itens pendentes do checklist da Evolucao Fase 2.

@@ -152,6 +152,15 @@ Checklist operacional (drill-down) - Evolução Fase 2: execução em pods dinâ
 - [ ] Coletar evidências (`Console Output`, nome do pod agent, duração e consumo) e registrar em `knowledge.md`.
 - [x] Atualizar `runbooks.md` com troubleshooting de falhas comuns de agent dinâmico (RBAC, imagem, pull e timeout).
 
+Atualização operacional da Evolução Fase 2 (2026-03-21 - pre-check de reexecução):
+- `origin/main` sincronizado para consumo do Jenkins job em SCM.
+- Imagem de agent publicada no registry local: `localhost:5000/jenkins-agent-ci:latest`.
+- Para reduzir dependência de pull HTTP/TLS do node runtime, imagem de agent carregada nos nós kind:
+  - `kind load docker-image jenkins-agent-ci:local --name kindops-lab`
+- `Jenkinsfile` de `app-python` e `app-java` ajustado para `image: jenkins-agent-ci:local` no pod efêmero.
+- Próximo passo imediato:
+  - reexecutar job e comprovar criação de `jenkins-agent-*` no namespace `cicd`.
+
 Nota de evolução:
 - Nesta fase, o objetivo é validar o CI com menor atrito usando registry local.
 - A publicação em ECR fica planejada para a Fase 8, onde a integração AWS passa a fazer parte do escopo oficial do projeto.

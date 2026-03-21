@@ -19,7 +19,7 @@ spec:
         path: /var/run/docker.sock
   containers:
     - name: ci
-      image: host.docker.internal:5000/jenkins-agent-ci:latest
+      image: jenkins-agent-ci:local
       imagePullPolicy: IfNotPresent
       command:
         - cat
