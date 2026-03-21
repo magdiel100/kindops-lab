@@ -765,3 +765,29 @@ Validacao dos dois itens pendentes da evolucao da Fase 2 relacionados ao Jenkins
 
 **Resultado:**  
 Os dois checks foram concluídos e marcados como `[x]` no `docs/roadmap.md`.
+
+### [2026-03-21] Validacao RBAC do ServiceAccount Jenkins no namespace `cicd`
+**Contexto:**  
+Execucao de validacao objetiva do ServiceAccount `jenkins` para o item pendente da Evolucao Fase 2 relacionado a RBAC de pods.
+
+**Comandos executados:**
+- `kubectl config current-context`
+- `kubectl -n cicd get sa jenkins -o wide`
+- `kubectl -n cicd auth can-i create pods --as=system:serviceaccount:cicd:jenkins`
+- `kubectl -n cicd auth can-i list pods --as=system:serviceaccount:cicd:jenkins`
+- `kubectl -n cicd auth can-i delete pods --as=system:serviceaccount:cicd:jenkins`
+- `kubectl -n cicd auth can-i get pods --as=system:serviceaccount:cicd:jenkins`
+- `kubectl -n cicd auth can-i watch pods --as=system:serviceaccount:cicd:jenkins`
+
+**Resultado observado:**
+- Contexto ativo: `kind-kindops-lab`.
+- ServiceAccount `jenkins` presente no namespace `cicd`.
+- Permissoes validadas com retorno `yes` para:
+  - `create pods`
+  - `list pods`
+  - `delete pods`
+  - `get pods`
+  - `watch pods`
+
+**Conclusao:**  
+Item de RBAC do ServiceAccount Jenkins validado e marcado como concluido (`[x]`) no `docs/roadmap.md`.

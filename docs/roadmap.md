@@ -142,7 +142,7 @@ Checklist operacional (drill-down):
 Checklist operacional (drill-down) - Evolução Fase 2: execução em pods dinâmicos:
 - [x] Validar que o plugin `kubernetes` está instalado e saudável no Jenkins.
 - [x] Confirmar configuração da cloud Kubernetes em `Manage Jenkins > Clouds` apontando para o cluster local.
-- [ ] Validar ServiceAccount do Jenkins com RBAC para criar/listar/deletar pods no namespace de execução.
+- [x] Validar ServiceAccount do Jenkins com RBAC para criar/listar/deletar pods no namespace de execução.
 - [x] Definir namespace padrão de agentes efêmeros (ex.: `cicd`) e convenção de labels.
 - [x] Criar imagem base de agent com ferramentas necessárias para CI (`git`, `docker/kaniko`, `trivy`, `k6`, etc.).
 - [x] Atualizar `Jenkinsfile` de `app-python` para usar `agent { kubernetes { ... } }`.
