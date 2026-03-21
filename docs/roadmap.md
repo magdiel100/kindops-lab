@@ -158,6 +158,7 @@ Atualização operacional da Evolução Fase 2 (2026-03-21 - pre-check de reexec
 - Para reduzir dependência de pull HTTP/TLS do node runtime, imagem de agent carregada nos nós kind:
   - `kind load docker-image jenkins-agent-ci:local --name kindops-lab`
 - `Jenkinsfile` de `app-python` e `app-java` ajustado para `image: jenkins-agent-ci:local` no pod efêmero.
+- Inventario do registry local revisado (`app-java`, `app-python`, `jenkins-agent-ci`) e comando de size documentado para operacao.
 - Próximo passo imediato:
   - reexecutar job e comprovar criação de `jenkins-agent-*` no namespace `cicd`.
 

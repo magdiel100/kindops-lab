@@ -160,11 +160,14 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
 - Pre-requisitos:
   - Plugin `kubernetes` instalado no Jenkins.
   - ServiceAccount `jenkins` com permissao para criar/listar/deletar pods em `cicd`.
-  - Imagem de agente CI publicada em `host.docker.internal:5000/jenkins-agent-ci:latest`.
+  - Imagem de agente CI publicada em `localhost:5000/jenkins-agent-ci:latest`.
 - Passo a passo:
   - Build/push da imagem base do agente:
-    - `docker build -t host.docker.internal:5000/jenkins-agent-ci:latest -f infra/jenkins/agent/Dockerfile .`
-    - `docker push host.docker.internal:5000/jenkins-agent-ci:latest`
+    - `docker build -t localhost:5000/jenkins-agent-ci:latest -f infra/jenkins/agent/Dockerfile .`
+    - `docker push localhost:5000/jenkins-agent-ci:latest`
+  - Carregar imagem do agent nos nodes kind (mitigacao para pull HTTP/TLS):
+    - `docker tag localhost:5000/jenkins-agent-ci:latest jenkins-agent-ci:local`
+    - `kind load docker-image jenkins-agent-ci:local --name kindops-lab`
   - Configurar cloud Kubernetes no Jenkins:
     - `Manage Jenkins > Clouds > New cloud > Kubernetes`
     - Namespace: `cicd`
@@ -185,8 +188,9 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
   - `403` ao criar pod:
     - Validar RBAC do ServiceAccount `jenkins` em `cicd`.
   - `ImagePullBackOff`:
-    - Confirmar push da imagem para `host.docker.internal:5000`.
-    - Testar pull da imagem a partir de um node/pod no cluster.
+    - Confirmar push da imagem para `localhost:5000`.
+    - Se houver erro `HTTP response to HTTPS client`, usar `kind load` e imagem local (`jenkins-agent-ci:local`).
+    - Testar pull/execucao da imagem por pod de diagnostico no namespace `cicd`.
   - `Cannot connect to the Docker daemon`:
     - Confirmar mount de `/var/run/docker.sock` no podTemplate.
   - Pod termina por `OOMKilled`/timeout:
@@ -196,3 +200,11 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
 - Rollback:
   - Voltar temporariamente para `agent any` no Jenkinsfile.
   - Reexecutar job para restaurar fluxo no controller enquanto corrige configuracao da cloud.
+
+### Consulta rapida do registry local (apoio operacional)
+- Listar repositorios:
+  - `curl -s http://localhost:5000/v2/_catalog`
+- Listar tags de um repositorio:
+  - `curl -s http://localhost:5000/v2/<repo>/tags/list`
+- Listar `repo:tag` com tamanho em bytes/MB:
+  - usar funcao `regsizes` documentada no `docs/knowledge.md`.

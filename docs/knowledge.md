@@ -824,3 +824,36 @@ Antes da reexecucao do job `app-python`, foram executadas as 3 correcoes solicit
 
 **Proximo passo recomendado:**  
 Executar novamente o job `app-python`/`app-java` e capturar evidencias de pod `jenkins-agent-*` no namespace `cicd` para concluir os dois itens pendentes do checklist da Evolucao Fase 2.
+
+### [2026-03-21] Registry local - inventario de imagens, tamanho e alias operacional
+**Contexto:**  
+Necessidade de padronizar consulta do conteudo do registry local (`localhost:5000`) e dos tamanhos de imagem para acompanhamento operacional da Fase 2.
+
+**Comandos validados:**
+- Catalogo de repositorios:
+  - `curl -s http://localhost:5000/v2/_catalog`
+- Tags por repositorio:
+  - `curl -s http://localhost:5000/v2/<repo>/tags/list`
+- Calculo de tamanho por `repo:tag` via manifest/layers:
+  - script com suporte a manifest list/index (quando `.layers` nao existe no primeiro retorno).
+
+**Inventario observado no momento da validacao:**
+- `app-java:b6150be`
+- `app-python:b6150be`
+- `jenkins-agent-ci:latest`
+
+**Tamanhos observados no momento da validacao:**
+- `app-java:b6150be -> 109.07 MB (114368113 bytes)`
+- `app-python:b6150be -> 52.45 MB (54998587 bytes)`
+- `jenkins-agent-ci:latest -> 343.96 MB (360670425 bytes)`
+
+**Alias/funcao recomendada (WSL/bash):**
+- Nome sugerido: `regsizes`
+- Objetivo: listar automaticamente `repo:tag` e tamanho total por imagem no registry local.
+- Aplicacao:
+  1. adicionar funcao no `~/.bashrc`
+  2. executar `source ~/.bashrc`
+  3. usar `regsizes` para consulta recorrente
+
+**Resultado:**  
+Consulta do registry local ficou padronizada para operacao e troubleshooting de CI/pipeline durante a Evolucao Fase 2.
