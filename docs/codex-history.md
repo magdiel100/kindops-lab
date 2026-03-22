@@ -123,5 +123,150 @@ Registrar o historico desta conversa entre usuario e Codex, consolidando pergunt
 - Fluxo de imagem de agent mitigado para ambiente local kind.
 - Restam os itens finais de validacao de build em pod efemero com evidencias completas de execucao do job para marcar encerramento integral do checklist pendente.
 
+## Historico estruturado (Perguntas e Respostas) - Registry local e tamanho de imagens
+
+### Bloco 1 - Listar imagens do registry
+**Pergunta (usuario):**
+- "listar todoas as imagens e os tamnhos dela"
+
+**Resposta (codex):**
+- Foi orientado uso da API do registry local com `jq`.
+- Comando inicial sugerido:
+
+```bash
+for repo in $(curl -s http://localhost:5000/v2/_catalog | jq -r '.repositories[]'); do
+  for tag in $(curl -s "http://localhost:5000/v2/$repo/tags/list" | jq -r '.tags[]?'); do
+    bytes=$(curl -s -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+      "http://localhost:5000/v2/$repo/manifests/$tag" | jq '[.layers[].size] | add // 0')
+    mb=$(awk "BEGIN {printf \"%.2f\", $bytes/1024/1024}")
+    echo "$repo:$tag -> $mb MB ($bytes bytes)"
+  done
+done
+```
+
+### Bloco 2 - Ambiente sem jq
+**Pergunta/Evidencia (usuario):**
+- `jq --version` retornou "Command 'jq' not found".
+
+**Resposta (codex):**
+- Instalar `jq` via `apt`:
+
+```bash
+sudo apt update && sudo apt install -y jq
+```
+
+### Bloco 3 - Erro ao calcular tamanho
+**Evidencia (usuario):**
+- Erro recorrente:
+  - `jq: error ... Cannot iterate over null (null)`
+  - Valores incorretos (`1024.00 MB` sem bytes validos).
+
+**Diagnostico (codex):**
+- O endpoint retornou `manifest list/OCI index` em alguns casos, sem `.layers` no primeiro retorno.
+
+**Resposta (codex) - comando robusto:**
+
+```bash
+for repo in $(curl -s http://localhost:5000/v2/_catalog | jq -r '.repositories[]'); do
+  for tag in $(curl -s "http://localhost:5000/v2/$repo/tags/list" | jq -r '.tags[]?'); do
+    manifest=$(curl -s \
+      -H "Accept: application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json" \
+      "http://localhost:5000/v2/$repo/manifests/$tag")
+
+    if echo "$manifest" | jq -e '.manifests' >/dev/null 2>&1; then
+      digest=$(echo "$manifest" | jq -r '.manifests[0].digest')
+      manifest=$(curl -s \
+        -H "Accept: application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json" \
+        "http://localhost:5000/v2/$repo/manifests/$digest")
+    fi
+
+    bytes=$(echo "$manifest" | jq -r '([.layers[]?.size] | add) // 0')
+    mb=$(awk -v b="$bytes" 'BEGIN {printf "%.2f", b/1024/1024}')
+    echo "$repo:$tag -> $mb MB ($bytes bytes)"
+  done
+done
+```
+
+### Bloco 4 - Ordenar do maior para o menor
+**Pergunta (usuario):**
+- Confirmacao do comando e opcao ordenada.
+
+**Resposta (codex):**
+- Versao ordenada por bytes:
+
+```bash
+for repo in $(curl -s http://localhost:5000/v2/_catalog | jq -r '.repositories[]'); do
+  for tag in $(curl -s "http://localhost:5000/v2/$repo/tags/list" | jq -r '.tags[]?'); do
+    manifest=$(curl -s \
+      -H "Accept: application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json" \
+      "http://localhost:5000/v2/$repo/manifests/$tag")
+
+    if echo "$manifest" | jq -e '.manifests' >/dev/null 2>&1; then
+      digest=$(echo "$manifest" | jq -r '.manifests[0].digest')
+      manifest=$(curl -s \
+        -H "Accept: application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json" \
+        "http://localhost:5000/v2/$repo/manifests/$digest")
+    fi
+
+    bytes=$(echo "$manifest" | jq -r '([.layers[]?.size] | add) // 0')
+    mb=$(awk -v b="$bytes" 'BEGIN {printf "%.2f", b/1024/1024}')
+    echo "$bytes|$repo:$tag|$mb MB"
+  done
+done | sort -nr | awk -F'|' '{print $2 " -> " $3 " (" $1 " bytes)"}'
+```
+
+### Bloco 5 - Alias/funcao para uso recorrente
+**Pergunta (usuario):**
+- "terias como criar um alias com esse comando para retornar o tamanho dessas imagens no registry ?"
+
+**Resposta (codex):**
+- Recomendado usar **funcao** (mais estavel que alias para comando longo):
+
+```bash
+cat >> ~/.bashrc <<'EOF'
+
+regsizes() {
+  for repo in $(curl -s http://localhost:5000/v2/_catalog | jq -r '.repositories[]'); do
+    for tag in $(curl -s "http://localhost:5000/v2/$repo/tags/list" | jq -r '.tags[]?'); do
+      manifest=$(curl -s \
+        -H "Accept: application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json" \
+        "http://localhost:5000/v2/$repo/manifests/$tag")
+
+      if echo "$manifest" | jq -e '.manifests' >/dev/null 2>&1; then
+        digest=$(echo "$manifest" | jq -r '.manifests[0].digest')
+        manifest=$(curl -s \
+          -H "Accept: application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json" \
+          "http://localhost:5000/v2/$repo/manifests/$digest")
+      fi
+
+      bytes=$(echo "$manifest" | jq -r '([.layers[]?.size] | add) // 0')
+      mb=$(awk -v b="$bytes" 'BEGIN {printf "%.2f", b/1024/1024}')
+      echo "$bytes|$repo:$tag|$mb MB"
+    done
+  done | sort -nr | awk -F'|' '{print $2 " -> " $3 " (" $1 " bytes)"}'
+}
+EOF
+
+source ~/.bashrc
+```
+
+**Uso:**
+
+```bash
+regsizes
+```
+
+### Bloco 6 - Consolidacao solicitada pelo usuario
+**Pergunta (usuario):**
+- Atualizar `knowledge.md`, `roadmap.md`, `runbooks.md` e commitar.
+
+**Resposta/acao (codex):**
+- Consolidacao aplicada e versionada no commit:
+  - `c1605ac` - `docs(fase2): consolida status, runbook e operacao do registry local`
+- Conteudo consolidado:
+  - progresso da Evolucao Fase 2 no roadmap;
+  - RB-010 alinhado com `jenkins-agent-ci:local` + `kind load`;
+  - inventario/tamanhos/comandos do registry no knowledge.
+
 ## Observacao
 Este documento foi criado como "Codex History" desta conversa para servir de memoria operacional no repositorio.
