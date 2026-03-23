@@ -890,3 +890,31 @@ Durante a evolucao da Fase 2, o controller Jenkins apresentou instabilidade com 
 **Decisao tomada:**
 - manter ambiente no estado estavel (rev 11) para nao bloquear execucao dos itens restantes da Fase 2.
 - planejar ajuste de versoes/plugins em janela controlada antes de novo `helm upgrade`.
+
+### [2026-03-22] Jenkins pipeline - falha de pod efemero por cgroup cpu quota
+**Contexto:**  
+Na tentativa de fechar a validacao de build em pod efemero, o job `app-python` criou o pod dinamico no namespace `cicd`, mas o container principal `ci` nao inicializou.
+
+**Evidencia do erro:**
+- `Container [ci] terminated [StartError]`
+- `failed to write ".../cpu.cfs_quota_us: invalid argument"`
+
+**Diagnostico:**
+- O problema nao estava na cloud Kubernetes do Jenkins (pod chegou a ser criado).
+- A falha ocorreu no runtime do node ao aplicar quota de CPU do container.
+- O `podTemplate` estava com `limits.cpu: "2000m"` em ambos Jenkinsfiles.
+
+**Correcao aplicada:**
+- Removido `limits.cpu` dos pod templates:
+  - `apps/app-python/Jenkinsfile`
+  - `apps/app-java/Jenkinsfile`
+- Mantidos:
+  - `requests.cpu: "500m"`
+  - limites de memoria (`2Gi`)
+
+**Resultado esperado apos ajuste:**
+- container `ci` inicia sem `StartError`;
+- pipeline entra nos stages normalmente dentro do pod efemero.
+
+**Proximo passo:**
+- reexecutar o job e coletar evidencias para fechar item pendente no roadmap.

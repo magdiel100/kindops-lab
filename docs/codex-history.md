@@ -305,3 +305,29 @@ Este documento foi criado como "Codex History" desta conversa para servir de mem
   - `docs/knowledge.md`
   - `docs/runbooks.md`
   - `docs/codex-history.md`
+
+## Atualizacao adicional - 2026-03-22 (falha de pod efemero no build e correcao)
+
+### Contexto reportado
+- Usuario executou o job para validar pod efemero e compartilhou logs.
+- Pod do build foi criado, mas o container `ci` terminou com `StartError`.
+
+### Evidencia principal
+- Erro no pod:
+  - `failed to write ... cpu.cfs_quota_us: invalid argument`
+- Efeito colateral no pipeline:
+  - `MissingContextVariableException` no `post` por perda de contexto apos falha do `node`.
+
+### Diagnostico
+- A prova de pod efemero estava correta (`Created Pod: kubernetes cicd/app-python-*`).
+- A causa de abortar os stages foi limite de CPU no podTemplate (`limits.cpu: "2000m"`), incompativel com runtime/cgroup do node local.
+
+### Acao aplicada
+- Remocao de `limits.cpu` em:
+  - `apps/app-python/Jenkinsfile`
+  - `apps/app-java/Jenkinsfile`
+- Mantidos `requests.cpu` e limites de memoria.
+
+### Resultado esperado
+- Pod `ci` iniciar sem `StartError` e seguir para os stages.
+- Proxima execucao do job deve gerar evidencia final para marcar item `[x]` no roadmap.

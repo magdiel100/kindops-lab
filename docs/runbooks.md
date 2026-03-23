@@ -195,6 +195,10 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
     - Confirmar mount de `/var/run/docker.sock` no podTemplate.
   - Pod termina por `OOMKilled`/timeout:
     - Ajustar `resources.requests/limits` no podTemplate dos Jenkinsfiles.
+  - `StartError` com `cpu.cfs_quota_us: invalid argument` no container `ci`:
+    - Revisar `limits.cpu` do podTemplate do agente.
+    - No ambiente kind local, remover `limits.cpu` quando houver incompatibilidade de cgroup/runtime.
+    - Reexecutar e validar criacao do pod `jenkins-agent-*` em `Running`.
   - Pod nao sobe por erro de cloud:
     - Revalidar endpoint/namespace da cloud Kubernetes em `Manage Jenkins > Clouds`.
   - `jenkins-0` em `Init:1/2` ou `CrashLoopBackOff` apos upgrade:

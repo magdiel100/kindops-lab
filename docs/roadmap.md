@@ -194,6 +194,22 @@ Atualização operacional da Evolução Fase 2 (2026-03-22 - rollback para estad
   - startup inicial ainda apresenta `Startup probe failed` temporário durante carga de plugins, com recuperação automática.
   - logs indicam warning de plugins falhos (`trilead-api`, `jsch`) e `JenkinsLocationConfiguration` com `localhost:8080/` inválido.
 
+Atualização operacional da Evolução Fase 2 (2026-03-22 - correção de pod efêmero para build):
+- Cenário observado na execução do job `app-python`:
+  - pod efêmero foi criado corretamente (`Created Pod: kubernetes cicd/app-python-*`), confirmando uso de agente dinâmico;
+  - container `ci` falhou na inicialização com `StartError`:
+    - `failed to write ... cpu.cfs_quota_us: invalid argument`.
+- Causa técnica:
+  - limitação de CPU do `podTemplate` (`limits.cpu: "2000m"`) incompatível com o ambiente atual de cgroup/runtime do node kind.
+- Correção aplicada:
+  - remoção de `limits.cpu` nos Jenkinsfiles:
+    - `apps/app-python/Jenkinsfile`
+    - `apps/app-java/Jenkinsfile`
+  - mantidos `requests.cpu` e limites de memória.
+- Status:
+  - ajuste aplicado em código; reexecução do job pendente para capturar evidência final e fechar o item do checklist:
+    - `[ ] Executar build de validação e comprovar que stages rodam em pod efêmero`.
+
 Nota de evolução:
 - Nesta fase, o objetivo é validar o CI com menor atrito usando registry local.
 - A publicação em ECR fica planejada para a Fase 8, onde a integração AWS passa a fazer parte do escopo oficial do projeto.
