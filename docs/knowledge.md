@@ -966,3 +966,32 @@ Nova execucao do job `app-python` com commit `0f5f0c0` (correcao de workspace) a
 
 **Proximo passo:**
 - reexecutar o job para validar `unit`/`integration` e continuidade das stages ate `build/push`.
+
+### [2026-03-22] Jenkins pipeline - comprovacao de stages em pod efemero e ajuste de permissao Docker
+**Contexto:**  
+Execucao `app-python #9` com commit `7fadcac` aplicado.
+
+**Comprovacao de pod efemero (objetivo da evolucao):**
+- Pod criado: `cicd/app-python-9-h86b1-7rc26-4llzx`.
+- Execucao reportada pelo Jenkins:
+  - `Running on app-python-9-h86b1-7rc26-4llzx in /home/jenkins/agent/workspace/app-python`.
+- Stages `lint`, `unit` e `integration` concluíram dentro do pod efêmero.
+
+**Falha residual encontrada:**
+- Stage `build`:
+  - `permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock`.
+
+**Diagnostico:**
+- O `docker.sock` estava montado, porém o processo no container `ci` não tinha permissao efetiva para acessar o socket do host.
+
+**Correcao aplicada:**
+- `securityContext` no container `ci` dos Jenkinsfiles:
+  - `runAsUser: 0`
+  - `runAsGroup: 0`
+- Arquivos alterados:
+  - `apps/app-python/Jenkinsfile`
+  - `apps/app-java/Jenkinsfile`
+
+**Status:**
+- Item de roadmap sobre comprovacao de execução em pod efêmero: concluído.
+- Reexecucao pendente para validar avanço de `build`/`push` após ajuste de permissao no Docker socket.

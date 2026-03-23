@@ -148,7 +148,7 @@ Checklist operacional (drill-down) - Evolução Fase 2: execução em pods dinâ
 - [x] Atualizar `Jenkinsfile` de `app-python` para usar `agent { kubernetes { ... } }`.
 - [x] Atualizar `Jenkinsfile` de `app-java` para usar `agent { kubernetes { ... } }`.
 - [x] Configurar `podTemplate` com `resources.requests/limits` e `workspaceVolume` adequados.
-- [ ] Executar build de validação e comprovar que stages rodam em pod efêmero (não no controller `jenkins-0`).
+- [x] Executar build de validação e comprovar que stages rodam em pod efêmero (não no controller `jenkins-0`).
 - [ ] Coletar evidências (`Console Output`, nome do pod agent, duração e consumo) e registrar em `knowledge.md`.
 - [x] Atualizar `runbooks.md` com troubleshooting de falhas comuns de agent dinâmico (RBAC, imagem, pull e timeout).
 
@@ -240,6 +240,20 @@ Atualização operacional da Evolução Fase 2 (2026-03-22 - correção de impor
     - `PYTHONPATH=. pytest -q tests/test_integration_http.py`
 - Status:
   - reexecução pendente para confirmar unit/integration/build e fechar o item do checklist.
+
+Atualização operacional da Evolução Fase 2 (2026-03-22 - validação consolidada de stages em pod efêmero):
+- Evidências da execução `app-python #9`:
+  - checkout em `7fadcac`;
+  - criação do pod efêmero `cicd/app-python-9-h86b1-7rc26-4llzx`;
+  - execução no agent: `Running on app-python-9-h86b1-7rc26-4llzx in /home/jenkins/agent/workspace/app-python`;
+  - stages `lint`, `unit` e `integration` executados no pod efêmero com sucesso.
+- Falha residual atual:
+  - stage `build` com erro de permissão no Docker socket:
+    - `permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock`.
+- Correção aplicada em código:
+  - `securityContext` do container `ci` ajustado para `runAsUser: 0` e `runAsGroup: 0` em:
+    - `apps/app-python/Jenkinsfile`
+    - `apps/app-java/Jenkinsfile`.
 
 Nota de evolução:
 - Nesta fase, o objetivo é validar o CI com menor atrito usando registry local.

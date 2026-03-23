@@ -207,6 +207,11 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
     - Exemplo:
       - `PYTHONPATH=. pytest -q tests/test_unit_health.py`
       - `PYTHONPATH=. pytest -q tests/test_integration_http.py`
+  - `permission denied` no `docker build` com `/var/run/docker.sock` montado:
+    - Ajustar `securityContext` do container `ci` no podTemplate para:
+      - `runAsUser: 0`
+      - `runAsGroup: 0`
+    - Reexecutar job e validar acesso ao daemon Docker.
   - Pod nao sobe por erro de cloud:
     - Revalidar endpoint/namespace da cloud Kubernetes em `Manage Jenkins > Clouds`.
   - `jenkins-0` em `Init:1/2` ou `CrashLoopBackOff` apos upgrade:

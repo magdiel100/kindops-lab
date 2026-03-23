@@ -374,3 +374,28 @@ Este documento foi criado como "Codex History" desta conversa para servir de mem
 
 ### Status
 - reexecucao pendente para confirmar stages seguintes e fechamento do item de validacao.
+
+## Atualizacao adicional - 2026-03-22 (comprovacao final de pod efemero + erro de docker.sock)
+
+### Evidencia recebida
+- Job `app-python #9` executou com commit `7fadcac`.
+- Prova de execucao em pod efemero:
+  - `Created Pod: kubernetes cicd/app-python-9-h86b1-7rc26-4llzx`
+  - `Running on app-python-9-h86b1-7rc26-4llzx ...`
+- Stages `lint`, `unit` e `integration` executaram no agent dinamico.
+
+### Nova falha
+- Stage `build`:
+  - `permission denied while trying to connect to the Docker daemon socket`.
+
+### Correcao aplicada
+- Ajuste de permissao no container `ci` (podTemplate):
+  - `runAsUser: 0`
+  - `runAsGroup: 0`
+- Arquivos:
+  - `apps/app-python/Jenkinsfile`
+  - `apps/app-java/Jenkinsfile`
+
+### Status
+- Item de roadmap "comprovar stages em pod efemero" encerrado como concluido.
+- Nova reexecucao pendente para validar continuidade de `build/push` apos ajuste de permissao.
