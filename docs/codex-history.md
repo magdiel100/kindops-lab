@@ -270,3 +270,38 @@ regsizes
 
 ## Observacao
 Este documento foi criado como "Codex History" desta conversa para servir de memoria operacional no repositorio.
+
+## Atualizacao adicional - 2026-03-22 (CrashLoopBackOff Jenkins e recuperacao)
+
+### Contexto reportado
+- Usuario informou que o `jenkins-0` permanecia em `CrashLoopBackOff`/nao subia.
+- Solicitacao: avaliar causa, retornar ao estado anterior estavel e validar.
+
+### Diagnostico executado
+- Coleta de estado e historico:
+  - `kubectl -n cicd get pods -o wide`
+  - `kubectl -n cicd describe pod jenkins-0`
+  - `kubectl -n cicd logs jenkins-0 -c init --previous --tail=220`
+  - `helm history jenkins -n cicd`
+  - `helm status jenkins -n cicd`
+- Evidencia principal:
+  - falha de dependencia no `init`:
+    - `git:5.10.0` exigindo `eddsa-api:0.3.0.1-19...`
+    - versao top-level inferior durante tentativa de upgrade.
+
+### Acao aplicada
+- Rollback para revisao previamente estavel:
+  - `helm rollback jenkins 11 -n cicd --wait --timeout 10m`
+
+### Validacao final
+- `kubectl -n cicd get pods -o wide`:
+  - `jenkins-0` em `2/2 Running`, `RESTARTS=0`.
+- `kubectl -n cicd rollout status statefulset/jenkins --timeout=120s`:
+  - rollout concluido.
+
+### Registro documental da acao
+- Atualizados nesta etapa:
+  - `docs/roadmap.md`
+  - `docs/knowledge.md`
+  - `docs/runbooks.md`
+  - `docs/codex-history.md`

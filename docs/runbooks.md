@@ -197,6 +197,14 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
     - Ajustar `resources.requests/limits` no podTemplate dos Jenkinsfiles.
   - Pod nao sobe por erro de cloud:
     - Revalidar endpoint/namespace da cloud Kubernetes em `Manage Jenkins > Clouds`.
+  - `jenkins-0` em `Init:1/2` ou `CrashLoopBackOff` apos upgrade:
+    - Verificar estado do release: `helm status jenkins -n cicd` e `helm history jenkins -n cicd`.
+    - Coletar erro do init: `kubectl -n cicd logs jenkins-0 -c init --previous --tail=220`.
+    - Se houver conflito de dependencia de plugin (ex.: `git` x `eddsa-api`), retornar para revisao estavel:
+      - `helm rollback jenkins 11 -n cicd --wait --timeout 10m`
+    - Confirmar recuperacao:
+      - `kubectl -n cicd get pods -o wide`
+      - `kubectl -n cicd rollout status statefulset/jenkins --timeout=120s`
 - Rollback:
   - Voltar temporariamente para `agent any` no Jenkinsfile.
   - Reexecutar job para restaurar fluxo no controller enquanto corrige configuracao da cloud.

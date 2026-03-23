@@ -162,6 +162,38 @@ Atualização operacional da Evolução Fase 2 (2026-03-21 - pre-check de reexec
 - Próximo passo imediato:
   - reexecutar job e comprovar criação de `jenkins-agent-*` no namespace `cicd`.
 
+Atualização operacional da Evolução Fase 2 (2026-03-22 - troubleshooting Jenkins CrashLoopBackOff):
+- Incidente observado: `jenkins-0` entrou em `CrashLoopBackOff`/`Init:1/2` durante tentativa de alinhar plugins para agentes dinâmicos.
+- Causa raiz principal:
+  - conflito de dependência no `init` do Jenkins:
+    - `git:5.10.0` exigindo `configuration-as-code:2031...`
+    - configuração antiga ainda referenciada como `configuration-as-code:2006...` no ciclo de bootstrap.
+- Correções aplicadas:
+  - atualização de `configuration-as-code` no `infra/jenkins/values.yaml` para `2031.veb_a_fdda_b_3ffd`;
+  - `controller.initializeOnce` mantido em `false` para permitir reidratação dos plugins após limpeza;
+  - aumento de tolerância do `startupProbe` (`failureThreshold: 120`) para reduzir reinício prematuro durante boot.
+- Status após correção:
+  - `jenkins-0` estabilizado em `2/2 Running` (sem restart no ciclo atual).
+- Próximo passo imediato:
+  - reexecutar `app-python` e capturar evidência de pod efêmero `jenkins-agent-*` em `cicd`.
+
+Atualização operacional da Evolução Fase 2 (2026-03-22 - rollback para estado estável do Jenkins):
+- Cenário observado:
+  - após tentativa de upgrade, release Helm entrou em estado inconsistente (`pending-upgrade`/`failed`) e `jenkins-0` ficou em `Init:1/2`.
+- Diagnóstico da falha no `init`:
+  - conflito de dependência de plugin:
+    - `git:5.10.0` exigindo `eddsa-api:0.3.0.1-19.vc432d923e5ee`;
+    - versão fixada incompatível no ciclo de atualização gerou `Plugin prerequisite not met`.
+- Ação de recuperação executada:
+  - rollback do release Jenkins para revisão estável:
+    - `helm rollback jenkins 11 -n cicd --wait --timeout 10m`
+- Evidência de estabilização pós-rollback:
+  - `kubectl -n cicd get pods -o wide` retornando `jenkins-0` em `2/2 Running`, `RESTARTS=0`.
+  - `kubectl -n cicd rollout status statefulset/jenkins` retornando rollout concluído.
+- Observações operacionais:
+  - startup inicial ainda apresenta `Startup probe failed` temporário durante carga de plugins, com recuperação automática.
+  - logs indicam warning de plugins falhos (`trilead-api`, `jsch`) e `JenkinsLocationConfiguration` com `localhost:8080/` inválido.
+
 Nota de evolução:
 - Nesta fase, o objetivo é validar o CI com menor atrito usando registry local.
 - A publicação em ECR fica planejada para a Fase 8, onde a integração AWS passa a fazer parte do escopo oficial do projeto.

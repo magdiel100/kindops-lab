@@ -857,3 +857,36 @@ Necessidade de padronizar consulta do conteudo do registry local (`localhost:500
 
 **Resultado:**  
 Consulta do registry local ficou padronizada para operacao e troubleshooting de CI/pipeline durante a Evolucao Fase 2.
+
+### [2026-03-22] Jenkins - troubleshooting de CrashLoopBackOff e retorno ao estado estavel
+**Contexto:**  
+Durante a evolucao da Fase 2, o controller Jenkins apresentou instabilidade com pod `jenkins-0` alternando entre `Init:1/2`, `pending-upgrade` de release Helm e falhas de inicializacao.
+
+**Causa raiz observada no ciclo de falha:**
+- conflito de dependencia de plugins no `init` do Jenkins:
+  - `git:5.10.0` requer `eddsa-api:0.3.0.1-19.vc432d923e5ee`;
+  - a versao pinada no ciclo de tentativa estava inferior, causando `Plugin prerequisite not met`.
+- release Helm ficou com revisoes `failed` e uma tentativa em `pending-upgrade`.
+
+**Comandos executados para validacao/recuperacao:**
+- `helm history jenkins -n cicd`
+- `helm status jenkins -n cicd`
+- `kubectl -n cicd get pods -o wide`
+- `kubectl -n cicd describe pod jenkins-0`
+- `kubectl -n cicd logs jenkins-0 -c init --previous --tail=220`
+- `helm rollback jenkins 11 -n cicd --wait --timeout 10m`
+- `kubectl -n cicd rollout status statefulset/jenkins --timeout=120s`
+
+**Resultado observado apos rollback:**
+- rollback para revisao estavel concluido com sucesso.
+- `jenkins-0` estabilizado em `2/2 Running`, com `RESTARTS=0`.
+- rollout do `statefulset/jenkins` concluido.
+
+**Warnings ainda presentes (nao bloqueantes para subida):**
+- health check de plugins com falha para `trilead-api` e `jsch`.
+- warning de URL invalida no startup:
+  - `Invalid URL received: localhost:8080/, considered as null`.
+
+**Decisao tomada:**
+- manter ambiente no estado estavel (rev 11) para nao bloquear execucao dos itens restantes da Fase 2.
+- planejar ajuste de versoes/plugins em janela controlada antes de novo `helm upgrade`.
