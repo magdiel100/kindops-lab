@@ -355,3 +355,22 @@ Este documento foi criado como "Codex History" desta conversa para servir de mem
 ### Status
 - Comprovacao de pod efemero: concluida.
 - Validacao completa dos stages: pendente de nova execucao apos ajuste de path.
+
+## Atualizacao adicional - 2026-03-22 (falha de import Python no stage unit)
+
+### Evidencia recebida
+- Job executou no commit `0f5f0c0`.
+- Pod efemero foi criado e stage `lint` passou.
+- Falha no stage `unit`:
+  - `ModuleNotFoundError: No module named 'app'`.
+
+### Diagnostico
+- Ambiente do agent exigiu `PYTHONPATH` explicito para resolver pacote local `app`.
+
+### Correcao aplicada
+- `apps/app-python/Jenkinsfile` atualizado para rodar testes com:
+  - `PYTHONPATH=. pytest -q tests/test_unit_health.py`
+  - `PYTHONPATH=. pytest -q tests/test_integration_http.py`
+
+### Status
+- reexecucao pendente para confirmar stages seguintes e fechamento do item de validacao.

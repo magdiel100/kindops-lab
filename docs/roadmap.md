@@ -225,6 +225,22 @@ Atualização operacional da Evolução Fase 2 (2026-03-22 - validação de pod 
   - infraestrutura de agente dinâmico validada;
   - reexecução pendente para validar fluxo completo de stages e então marcar item como concluído.
 
+Atualização operacional da Evolução Fase 2 (2026-03-22 - correção de import no stage unit da app Python):
+- Execução mais recente confirmou:
+  - checkout do commit correto (`0f5f0c0`);
+  - pod efêmero criado e utilizado no namespace `cicd`;
+  - stage `lint` concluído com sucesso no pod efêmero.
+- Nova falha observada no stage `unit`:
+  - `ModuleNotFoundError: No module named 'app'`.
+- Causa:
+  - contexto de import do pytest sem `PYTHONPATH` explícito no ambiente do agent.
+- Correção aplicada:
+  - `apps/app-python/Jenkinsfile` atualizado para executar:
+    - `PYTHONPATH=. pytest -q tests/test_unit_health.py`
+    - `PYTHONPATH=. pytest -q tests/test_integration_http.py`
+- Status:
+  - reexecução pendente para confirmar unit/integration/build e fechar o item do checklist.
+
 Nota de evolução:
 - Nesta fase, o objetivo é validar o CI com menor atrito usando registry local.
 - A publicação em ECR fica planejada para a Fase 8, onde a integração AWS passa a fazer parte do escopo oficial do projeto.

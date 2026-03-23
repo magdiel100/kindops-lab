@@ -945,3 +945,24 @@ Reexecucao do job `app-python` apos ajuste de `limits.cpu`.
 
 **Proximo passo:**
 - reexecutar build para validar execucao completa dos stages no pod efemero e fechar item pendente da Evolucao Fase 2.
+
+### [2026-03-22] Jenkins pipeline - erro de import Python no stage unit
+**Contexto:**  
+Nova execucao do job `app-python` com commit `0f5f0c0` (correcao de workspace) aplicada.
+
+**Resultado observado:**
+- Pod efemero criado e conectado normalmente.
+- Stage `lint` executado com sucesso (`ruff check ...` passou).
+- Stage `unit` falhou com:
+  - `ModuleNotFoundError: No module named 'app'`.
+
+**Diagnostico:**
+- Mesmo no diretorio correto da app, o `pytest` no agent nao resolveu o pacote local sem `PYTHONPATH`.
+
+**Correcao aplicada:**
+- Em `apps/app-python/Jenkinsfile`:
+  - `unit`: `PYTHONPATH=. pytest -q tests/test_unit_health.py`
+  - `integration`: `PYTHONPATH=. pytest -q tests/test_integration_http.py`
+
+**Proximo passo:**
+- reexecutar o job para validar `unit`/`integration` e continuidade das stages ate `build/push`.

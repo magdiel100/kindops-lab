@@ -202,6 +202,11 @@ Documentar procedimentos operacionais e resposta a incidentes de forma executave
   - `requirements-dev.txt` (ou `pom.xml`) nao encontrado no stage:
     - Confirmar que o pipeline executa no subdiretorio da app (`apps/app-python` ou `apps/app-java`).
     - Usar `dir("${APP_DIR}")` nos stages para garantir contexto correto de workspace.
+  - `ModuleNotFoundError: No module named 'app'` no pytest da app Python:
+    - Executar testes com `PYTHONPATH=.`
+    - Exemplo:
+      - `PYTHONPATH=. pytest -q tests/test_unit_health.py`
+      - `PYTHONPATH=. pytest -q tests/test_integration_http.py`
   - Pod nao sobe por erro de cloud:
     - Revalidar endpoint/namespace da cloud Kubernetes em `Manage Jenkins > Clouds`.
   - `jenkins-0` em `Init:1/2` ou `CrashLoopBackOff` apos upgrade:
