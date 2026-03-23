@@ -918,3 +918,30 @@ Na tentativa de fechar a validacao de build em pod efemero, o job `app-python` c
 
 **Proximo passo:**
 - reexecutar o job e coletar evidencias para fechar item pendente no roadmap.
+
+### [2026-03-22] Jenkins pipeline - validacao de pod efemero e ajuste de workspace da app
+**Contexto:**  
+Reexecucao do job `app-python` apos ajuste de `limits.cpu`.
+
+**Resultado observado:**
+- Pod efemero criado e conectado com sucesso:
+  - `Created Pod: kubernetes cicd/app-python-7-*`
+  - `Running on app-python-7-* in /home/jenkins/agent/workspace/app-python`
+- Isso comprovou que os stages nao estao rodando no controller `jenkins-0`.
+
+**Falha encontrada na sequencia:**
+- stage `lint`:
+  - `ERROR: Could not open requirements file: [Errno 2] No such file or directory: 'requirements-dev.txt'`
+
+**Diagnostico:**
+- checkout ocorre na raiz do repo;
+- arquivos da app Python ficam em `apps/app-python`;
+- comandos do pipeline estavam executando sem `dir(...)`.
+
+**Correcao aplicada:**
+- Inclusao de `APP_DIR` e encapsulamento de stages com `dir("${APP_DIR}")` em:
+  - `apps/app-python/Jenkinsfile`
+  - `apps/app-java/Jenkinsfile`
+
+**Proximo passo:**
+- reexecutar build para validar execucao completa dos stages no pod efemero e fechar item pendente da Evolucao Fase 2.

@@ -210,6 +210,21 @@ Atualização operacional da Evolução Fase 2 (2026-03-22 - correção de pod e
   - ajuste aplicado em código; reexecução do job pendente para capturar evidência final e fechar o item do checklist:
     - `[ ] Executar build de validação e comprovar que stages rodam em pod efêmero`.
 
+Atualização operacional da Evolução Fase 2 (2026-03-22 - validação de pod efêmero e ajuste de diretório do pipeline):
+- Evidência confirmada:
+  - job `app-python` executando em pod efêmero (`Created Pod: kubernetes cicd/app-python-7-*` e `Running on app-python-7-*`).
+- Nova falha identificada:
+  - stage `lint` falhou com:
+    - `Could not open requirements file: requirements-dev.txt`
+  - causa: execução no diretório raiz do repositório, enquanto os artefatos da app estão em `apps/app-python`.
+- Correção aplicada:
+  - Jenkinsfiles ajustados para executar stages dentro de `APP_DIR`:
+    - `apps/app-python/Jenkinsfile` (`APP_DIR=apps/app-python`);
+    - `apps/app-java/Jenkinsfile` (`APP_DIR=apps/app-java`).
+- Status:
+  - infraestrutura de agente dinâmico validada;
+  - reexecução pendente para validar fluxo completo de stages e então marcar item como concluído.
+
 Nota de evolução:
 - Nesta fase, o objetivo é validar o CI com menor atrito usando registry local.
 - A publicação em ECR fica planejada para a Fase 8, onde a integração AWS passa a fazer parte do escopo oficial do projeto.

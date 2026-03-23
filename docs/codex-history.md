@@ -331,3 +331,27 @@ Este documento foi criado como "Codex History" desta conversa para servir de mem
 ### Resultado esperado
 - Pod `ci` iniciar sem `StartError` e seguir para os stages.
 - Proxima execucao do job deve gerar evidencia final para marcar item `[x]` no roadmap.
+
+## Atualizacao adicional - 2026-03-22 (pod efemero validado e ajuste de path do pipeline)
+
+### Evidencia recebida
+- Job `app-python` passou a consumir o commit corrigido (`53684cd`) e executou em pod efemero:
+  - `Created Pod: kubernetes cicd/app-python-7-*`
+  - `Running on app-python-7-* in /home/jenkins/agent/workspace/app-python`
+
+### Nova falha
+- Stage `lint` falhou por arquivo ausente:
+  - `Could not open requirements file: requirements-dev.txt`
+
+### Diagnostico
+- Execucao dos comandos estava na raiz do checkout.
+- Projeto e multi-app; cada app roda em subdiretorio (`apps/app-python` e `apps/app-java`).
+
+### Correcao aplicada
+- Jenkinsfiles atualizados para executar os stages dentro de `APP_DIR` com `dir("${APP_DIR}")`:
+  - `apps/app-python/Jenkinsfile`
+  - `apps/app-java/Jenkinsfile`
+
+### Status
+- Comprovacao de pod efemero: concluida.
+- Validacao completa dos stages: pendente de nova execucao apos ajuste de path.

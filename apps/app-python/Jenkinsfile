@@ -41,6 +41,7 @@ spec:
 
   environment {
     APP_NAME = "app-python"
+    APP_DIR = "apps/app-python"
     IMAGE_REPO = "local/${APP_NAME}"
     IMAGE_TAG = "${env.GIT_COMMIT ?: 'dev'}"
     REGISTRY_AUTH_REQUIRED = "${env.REGISTRY_AUTH_REQUIRED ?: 'false'}"
@@ -49,65 +50,77 @@ spec:
   stages {
     stage('lint') {
       steps {
-        sh '''
-          python3 -m venv .venv
-          . .venv/bin/activate
-          pip install -r requirements-dev.txt
-          ruff check app tests
-        '''
+        dir("${APP_DIR}") {
+          sh '''
+            python3 -m venv .venv
+            . .venv/bin/activate
+            pip install -r requirements-dev.txt
+            ruff check app tests
+          '''
+        }
       }
     }
 
     stage('unit') {
       steps {
-        sh '''
-          . .venv/bin/activate
-          pytest -q tests/test_unit_health.py
-        '''
+        dir("${APP_DIR}") {
+          sh '''
+            . .venv/bin/activate
+            pytest -q tests/test_unit_health.py
+          '''
+        }
       }
     }
 
     stage('integration') {
       steps {
-        sh '''
-          . .venv/bin/activate
-          pytest -q tests/test_integration_http.py
-        '''
+        dir("${APP_DIR}") {
+          sh '''
+            . .venv/bin/activate
+            pytest -q tests/test_integration_http.py
+          '''
+        }
       }
     }
 
     stage('build') {
       steps {
-        sh 'docker build -t ${IMAGE_REPO}:${IMAGE_TAG} .'
+        dir("${APP_DIR}") {
+          sh 'docker build -t ${IMAGE_REPO}:${IMAGE_TAG} .'
+        }
       }
     }
 
     stage('scan-trivy') {
       steps {
-        sh '''
-          if command -v trivy >/dev/null 2>&1; then
-            trivy image --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_REPO}:${IMAGE_TAG}
-          else
-            echo "Trivy nao encontrado no agente; stage marcado como no-op."
-          fi
-        '''
+        dir("${APP_DIR}") {
+          sh '''
+            if command -v trivy >/dev/null 2>&1; then
+              trivy image --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_REPO}:${IMAGE_TAG}
+            else
+              echo "Trivy nao encontrado no agente; stage marcado como no-op."
+            fi
+          '''
+        }
       }
     }
 
     stage('smoke-k6') {
       steps {
-        sh '''
-          CONTAINER_NAME="${APP_NAME}-smoke"
-          docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
-          docker run -d --name "${CONTAINER_NAME}" -p 18000:8000 ${IMAGE_REPO}:${IMAGE_TAG}
-          sleep 5
-          if command -v k6 >/dev/null 2>&1; then
-            SMOKE_BASE_URL=http://127.0.0.1:18000 k6 run k6/smoke.js
-          else
-            echo "k6 nao encontrado no agente; stage marcado como no-op."
-          fi
-          docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
-        '''
+        dir("${APP_DIR}") {
+          sh '''
+            CONTAINER_NAME="${APP_NAME}-smoke"
+            docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
+            docker run -d --name "${CONTAINER_NAME}" -p 18000:8000 ${IMAGE_REPO}:${IMAGE_TAG}
+            sleep 5
+            if command -v k6 >/dev/null 2>&1; then
+              SMOKE_BASE_URL=http://127.0.0.1:18000 k6 run k6/smoke.js
+            else
+              echo "k6 nao encontrado no agente; stage marcado como no-op."
+            fi
+            docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
+          '''
+        }
       }
     }
 
@@ -120,18 +133,22 @@ spec:
 
           if ((env.REGISTRY_AUTH_REQUIRED ?: 'false').toBoolean()) {
             withCredentials([usernamePassword(credentialsId: 'registry-creds', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASS')]) {
+              dir("${APP_DIR}") {
+                sh '''
+                  echo "${REGISTRY_PASS}" | docker login "${REGISTRY_HOST}" -u "${REGISTRY_USER}" --password-stdin
+                  docker tag ${IMAGE_REPO}:${IMAGE_TAG} ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
+                  docker push ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
+                '''
+              }
+            }
+          } else {
+            dir("${APP_DIR}") {
               sh '''
-                echo "${REGISTRY_PASS}" | docker login "${REGISTRY_HOST}" -u "${REGISTRY_USER}" --password-stdin
+                echo "REGISTRY_AUTH_REQUIRED=false, pulando docker login."
                 docker tag ${IMAGE_REPO}:${IMAGE_TAG} ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
                 docker push ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
               '''
             }
-          } else {
-            sh '''
-              echo "REGISTRY_AUTH_REQUIRED=false, pulando docker login."
-              docker tag ${IMAGE_REPO}:${IMAGE_TAG} ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
-              docker push ${REGISTRY_HOST}/${APP_NAME}:${IMAGE_TAG}
-            '''
           }
         }
       }
@@ -140,7 +157,9 @@ spec:
 
   post {
     always {
-      sh 'rm -rf .venv || true'
+      dir("${APP_DIR}") {
+        sh 'rm -rf .venv || true'
+      }
     }
   }
 }
